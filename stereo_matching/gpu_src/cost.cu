@@ -13,8 +13,8 @@ __global__ void cu_Build_cost_table(uchar *d_ll, uchar *d_rr,
 	int row = index / img_w;
 
 	uint64_t value_l = 0, value_r = 0;
-	uchar ctr_pixel_l = d_ll[row*img_w + col];
-	uchar ctr_pixel_r = d_rr[row*img_w + col];
+	uchar ctr_pixel_l = d_ll[index];
+	uchar ctr_pixel_r = d_rr[index];
 
 	for (int i = -win_h / 2; i <= win_h / 2; i++)
 	{
@@ -31,8 +31,8 @@ __global__ void cu_Build_cost_table(uchar *d_ll, uchar *d_rr,
 			value_r = (value_r | (d_rr[index_] > ctr_pixel_r)) << 1;
 		}
 	}
-	d_cost_table_l[row*img_w + col] = value_l;
-	d_cost_table_r[row*img_w + col] = value_r;
+	d_cost_table_l[index] = value_l;
+	d_cost_table_r[index] = value_r;
 	return;
 }
 
@@ -57,6 +57,23 @@ __global__ void cu_Build_dsi_from_table(uint64_t *d_cost_table_l,
 }
 
 
+__global__ void cu_Build_dsi_from_table2(uint64_t *d_cost_table_l,
+																			  uint64_t *d_cost_table_r,
+																			  float *d_cost,
+																			  int img_w, int img_h, int max_disp)
+{
+	int index = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y + threadIdx.y * blockDim.x + threadIdx.x;
+	if (index > img_w * img_h *  max_disp - 1)  return;
+	int disp = index % max_disp;
+	int col = (index - disp) / max_disp % img_w;
+	int row = (index - disp) / max_disp / img_w;
+
+	uint64_t ct_l = d_cost_table_l[row*img_w + col];
+	uint64_t ct_r = d_cost_table_r[row*img_w + MAX(col - disp, 0)];
+	d_cost[index] = cu_hamming_cost(ct_l, ct_r);
+}
+
+
 __device__ int cu_hamming_cost(uint64_t ct_l, uint64_t ct_r)
 {
 	uint64_t not_the_same = ct_l ^ ct_r;
@@ -69,4 +86,62 @@ __device__ int cu_hamming_cost(uint64_t ct_l, uint64_t ct_r)
 		not_the_same >>= 1;
 	}
 	return cnt;
+}
+
+
+__global__ void cu_cost_horizontal_filter(float *d_cost, int img_w, int img_h, int max_disp, int win_size)
+{
+	int index = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y + threadIdx.y * blockDim.x + threadIdx.x;
+	if (index > img_h * max_disp - 1)  return;
+	int row = index % img_h;
+	int disp = index / img_h;
+
+	float sum = 0;
+	int dst_index = row * img_w * max_disp + disp;
+	// initialize
+	for (int k = 0; k < win_size; k++)
+	{
+		sum += d_cost[dst_index];
+		dst_index += max_disp;
+	}
+	// box filter
+	for (int j = win_size / 2; j < img_w - win_size / 2; j++)
+	{
+		d_cost[row * img_w * max_disp + j * max_disp + disp] = sum / win_size;
+		if (j < img_w - win_size / 2 - 1)
+		{
+			sum += d_cost[dst_index];
+			sum -= d_cost[dst_index - win_size * max_disp];
+			dst_index += max_disp;
+		}
+	}
+}
+
+
+__global__ void cu_cost_vertical_filter(float *d_cost, int img_w, int img_h, int max_disp, int win_size)
+{
+	int index = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y + threadIdx.y * blockDim.x + threadIdx.x;
+	if (index > img_w * max_disp - 1)  return;
+	int col = index % img_w;
+	int disp = index / img_w;
+
+	float sum = 0;
+	int dst_index = col * max_disp + disp;
+	// initialize
+	for (int k = 0; k < win_size; k++)
+	{
+		sum += d_cost[dst_index];
+		dst_index += img_w * max_disp;
+	}
+	// box filter
+	for (int i = win_size / 2; i < img_h - win_size / 2; i++)
+	{
+		d_cost[i * img_w * max_disp + col * max_disp + disp] = sum / win_size;
+		if (i < img_h - win_size / 2 - 1)
+		{
+			sum += d_cost[dst_index];
+			sum -= d_cost[dst_index - win_size * img_w * max_disp];
+			dst_index += img_w * max_disp;
+		}
+	}
 }

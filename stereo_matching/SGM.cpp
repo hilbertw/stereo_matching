@@ -30,17 +30,13 @@ SGM::SGM(Mat &ll, Mat &rr) : Solver(ll, rr)
 
 void SGM::Process()
 {
-	// build dsi
-	//Build_dsi();
-	//Find_dsi_mean_max();
-
 	//Build_cost_table();
 	//Build_dsi_from_table();
+	//cost_horizontal_filter(COST_WIN_W);
+	//cost_vertical_filter(COST_WIN_H);
+
 	//Find_table_mean_max();
 	//Find_dsi_mean_max();
-
-	cost_horizontal_filter(COST_WIN_W);
-	cost_vertical_filter(COST_WIN_H);
 
 	 //build L1: left -> right
 #pragma omp parallel for
@@ -77,6 +73,7 @@ void SGM::Process()
 			min_L1[i * img_w + j] = minL1;
 		}
 	}
+	printf("%f\n", min_L1[22 * img_w + 555]);
 
 	// build L2: right -> left
 #pragma omp parallel for

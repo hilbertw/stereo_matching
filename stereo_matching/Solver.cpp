@@ -52,6 +52,7 @@ void Solver::Show_disp()
 	}
 	
 	// convert to RGB for better observation
+	filterSpeckles(disp, INVALID_DISP, SPECKLE_SIZE, SPECKLE_DIS);
 	Colormap();	
 
 	Mat debug_view, tmp;
@@ -239,6 +240,19 @@ void Solver::cost_vertical_filter(int win_size)
 void Solver::fetch_cost(float *p)
 {
 	memcpy(cost, p, img_h * img_w * MAX_DISP * sizeof(float));
+}
+
+
+void Solver::fetch_disparity(uchar *d)
+{
+	int cnt = 0;
+	for (int i = 0; i < disp.rows; i++)
+	{
+		for (int j = 0; j < disp.cols; j++)
+		{
+			disp.at<uchar>(i, j) = d[cnt++];
+		}
+	}
 }
 
 

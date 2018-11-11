@@ -33,6 +33,7 @@ public:
 	void cost_horizontal_filter(int win_size);
 	void cost_vertical_filter(int win_size);
 	void fetch_cost(float *p);
+	void fetch_disparity(uchar *d);
 	void post_filter();
 	void Colormap();
 	Mat get_disp() const

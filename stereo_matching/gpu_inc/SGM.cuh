@@ -1,5 +1,6 @@
 #include "../global.h"
 #include "../gpu_inc/cost.cuh"
+#include "../gpu_inc/aggregation.cuh"
 
 
 const int IMG_W = 1240;
@@ -26,7 +27,7 @@ class GPU_SGM
 public:
 	GPU_SGM();
 	~GPU_SGM();
-	void Process(Mat &ll, Mat &rr, Mat &disp, float *cost);
+	void Process(Mat &ll, Mat &rr, uchar *disp, float *cost);
 
 private:
 	uchar *d_ll, *d_rr;

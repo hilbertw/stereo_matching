@@ -123,6 +123,12 @@
       <AdditionalLibraryDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\lib;D:\opencv\build\x64\vc14\lib</AdditionalLibraryDirectories>
       <StackReserveSize>128000000</StackReserveSize>
     </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <FastMath>true</FastMath>
+      <Optimization>O2</Optimization>
+      <Runtime>MTd</Runtime>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -183,9 +189,11 @@
     <ClInclude Include="GM.h" />
     <CudaCompile Include="gpu_inc\cost.cuh" />
     <CudaCompile Include="gpu_inc\SGM.cuh" />
+    <CudaCompile Include="gpu_inc\aggregation.cuh" />
     <ClInclude Include="SGM.h" />
     <ClInclude Include="Solver.h" />
     <ClInclude Include="utils.h" />
+    <CudaCompile Include="gpu_src\aggregation.cu" />
     <CudaCompile Include="gpu_src\cost.cu" />
     <CudaCompile Include="gpu_src\SGM.cu" />
   </ItemGroup>
