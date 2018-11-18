@@ -15,15 +15,18 @@ int main()
 	printf("rows: %d, cols:%d\n", ll.rows, ll.cols);
 		
 	Solver *sv = new SGM(ll, rr);
-	GPU_SGM gpu_solver;
+	GPU_SGM *g_sv = new GPU_SGM();
 	uchar *disp  = new uchar[1240 * 360];
 	float *cost = new float[1240 * 360 * MAX_DISP];
 
 	printf("waiting ...\n");
 	double be = get_cur_ms();
-	gpu_solver.Process(ll, rr, disp, cost);
+	// gpu code
+	g_sv->Process(ll, rr, disp, cost);
+	sv->fetch_cost(cost);
 	sv->fetch_disparity(disp);
-	//sv->fetch_cost(cost);
+	sv->post_filter();
+	// cpu code
 	//sv->Process();
 	double en = get_cur_ms();
 	printf("done ...\n");

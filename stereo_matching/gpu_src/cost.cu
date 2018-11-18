@@ -43,26 +43,6 @@ __global__ void cu_Build_dsi_from_table(uint64_t *d_cost_table_l,
 																		   int img_w, int img_h, int max_disp)
 {
 	int index = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y + threadIdx.y * blockDim.x + threadIdx.x;
-	if (index > img_w * img_h - 1)  return;
-	int col = index % img_w;
-	int row = index / img_w;
-
-	for (int d = 0; d < max_disp; d++)
-	{
-		int dst_index = row * img_w * max_disp + col * max_disp + d;
-		uint64_t ct_l = d_cost_table_l[row*img_w + col];
-		uint64_t ct_r = d_cost_table_r[row*img_w + MAX(col - d, 0)];
-		d_cost[dst_index] = cu_hamming_cost(ct_l, ct_r);
-	}
-}
-
-
-__global__ void cu_Build_dsi_from_table2(uint64_t *d_cost_table_l,
-																			  uint64_t *d_cost_table_r,
-																			  float *d_cost,
-																			  int img_w, int img_h, int max_disp)
-{
-	int index = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y + threadIdx.y * blockDim.x + threadIdx.x;
 	if (index > img_w * img_h *  max_disp - 1)  return;
 	int disp = index % max_disp;
 	int col = (index - disp) / max_disp % img_w;

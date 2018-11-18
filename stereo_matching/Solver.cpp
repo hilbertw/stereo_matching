@@ -52,8 +52,7 @@ void Solver::Show_disp()
 	}
 	
 	// convert to RGB for better observation
-	filterSpeckles(disp, INVALID_DISP, SPECKLE_SIZE, SPECKLE_DIS);
-	Colormap();	
+	Colormap();
 
 	Mat debug_view, tmp;
 
@@ -403,8 +402,7 @@ void Solver::post_filter()
 	}
 
 	// speckle_filter
-	//speckle_filter(filtered_disp, INVALID_DISP, SPECKLE_SIZE, SPECKLE_DIS);
-	filterSpeckles(disp, INVALID_DISP, SPECKLE_SIZE, SPECKLE_DIS);
+	speckle_filter(filtered_disp, INVALID_DISP, SPECKLE_SIZE, SPECKLE_DIS);
 
 	/*
 	for (int i = 0; i < img_h; i++)
@@ -428,8 +426,8 @@ void  Solver::Colormap()
 	{
 		for (int j = 0; j < disp.cols; j++)
 		{
-			//disp_value = filtered_disp.at<float>(i, j);
-			disp_value = disp.at<uchar>(i, j);
+			disp_value = filtered_disp.at<float>(i, j);
+			//disp_value = disp.at<uchar>(i, j);
 			if (disp_value > MAX_DISP - 1)
 			{
 				colored_disp.at<Vec3b>(i, j)[0] = 0;

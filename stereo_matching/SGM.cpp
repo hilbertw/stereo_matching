@@ -30,10 +30,10 @@ SGM::SGM(Mat &ll, Mat &rr) : Solver(ll, rr)
 
 void SGM::Process()
 {
-	//Build_cost_table();
-	//Build_dsi_from_table();
-	//cost_horizontal_filter(COST_WIN_W);
-	//cost_vertical_filter(COST_WIN_H);
+	Build_cost_table();
+	Build_dsi_from_table();
+	cost_horizontal_filter(COST_WIN_W);
+	cost_vertical_filter(COST_WIN_H);
 
 	//Find_table_mean_max();
 	//Find_dsi_mean_max();
@@ -73,7 +73,6 @@ void SGM::Process()
 			min_L1[i * img_w + j] = minL1;
 		}
 	}
-	printf("%f\n", min_L1[22 * img_w + 555]);
 
 	// build L2: right -> left
 #pragma omp parallel for
@@ -343,12 +342,10 @@ void SGM::Process()
 			for (int d = 0; d < MAX_DISP; d++)
 			{
 				int index = i * img_w * MAX_DISP + j * MAX_DISP + d;
-				cost[index] = 1.2*L1[index] + 1.2*L2[index] + L3[index] + L4[index];  // add horizontal constraint
-				//cost[index] = L1[index];
+				cost[index] = L1[index] + L2[index] + L3[index] + L4[index];
 				if (USE_8_PATH)
 				{
 					cost[index] += (L5[index] + L6[index] + L7[index] + L8[index]);
-					//cost[index] = L1[index] + L2[index];
 				}
 				// wta
 				if (cost[index] < min_cost)
