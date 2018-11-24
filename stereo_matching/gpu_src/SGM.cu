@@ -234,13 +234,21 @@ void GPU_SGM::post_filter()
 */
 
 
+__global__ void warmup()
+{}
+
+
 void GPU_SGM::Process(Mat &ll, Mat &rr, uchar *disp, float *cost)
 {
 	cudaSetDevice(0);
+	warmup << <512, 512 >> >();  // warm up 
+
 	cudaMemcpyAsync(d_ll, ll.data, IMG_H* IMG_W * sizeof(uchar), cudaMemcpyHostToDevice, stream1);
 	cudaMemcpyAsync(d_rr, rr.data, IMG_H* IMG_W * sizeof(uchar), cudaMemcpyHostToDevice, stream2);
 	cudaStreamSynchronize(stream1);
 	cudaStreamSynchronize(stream2);
+
+	double be = get_cur_ms();
 
 	dim3 grid, block;
 	grid.x = (IMG_W - 1) / 32 + 1;
@@ -248,16 +256,30 @@ void GPU_SGM::Process(Mat &ll, Mat &rr, uchar *disp, float *cost)
 	block.x = 32;
 	block.y = 32;
 	cu_Build_cost_table << <grid, block, 0, stream1 >> > (d_ll, d_rr, d_cost_table_l, d_cost_table_r, IMG_W, IMG_H, CU_WIN_W, CU_WIN_H);
-
-	grid.x = 512;
-	grid.y = 512;
 	cu_Build_dsi_from_table << <grid, block, 0, stream1 >> > (d_cost_table_l, d_cost_table_r, d_cost, IMG_W, IMG_H, CU_MAX_DISP);
+
+	cudaDeviceSynchronize();
+	printf("build cost takes %lf ms\n", get_cur_ms() - be);
+
+	be = get_cur_ms();
+
+	//cu_cost_filter_new << <grid, block, 0, stream1 >> > (d_cost, IMG_W, IMG_H, CU_MAX_DISP, CU_COST_WIN_W, CU_COST_WIN_H);
 
 	grid.x = (IMG_W - 1) / 32 + 1;
 	grid.y = (CU_MAX_DISP - 1) / 32 + 1;
 	cu_cost_horizontal_filter << <grid, block, 0, stream1 >> > (d_cost, IMG_W, IMG_H, CU_MAX_DISP, CU_COST_WIN_W);
 	cu_cost_vertical_filter << <grid, block, 0, stream1 >> > (d_cost, IMG_W, IMG_H, CU_MAX_DISP, CU_COST_WIN_H);
-	cudaStreamSynchronize(stream1);
+
+	//cu_cost_horizontal_filter_new << <grid, block, 0, stream1 >> > (d_cost, d_L1, IMG_W, IMG_H, CU_MAX_DISP, CU_COST_WIN_W);
+	//cu_cost_vertical_filter_new << <grid, block, 0, stream2 >> > (d_cost, d_L2, IMG_W, IMG_H, CU_MAX_DISP, CU_COST_WIN_H);
+	//cudaStreamSynchronize(stream1);
+	//cudaStreamSynchronize(stream2);
+	//cu_cost_filter << <grid, block, 0, stream1 >> > (d_cost, d_L1, d_L2, IMG_W, IMG_H, CU_MAX_DISP);
+
+	cudaDeviceSynchronize();
+	printf("cost filter takes %lf ms\n", get_cur_ms() - be);
+
+	be = get_cur_ms();
 
 	grid.x = 512;
 	grid.y = 512;
@@ -297,4 +319,7 @@ void GPU_SGM::Process(Mat &ll, Mat &rr, uchar *disp, float *cost)
 	wta<<<grid, block, 0, stream1>>>(d_cost, d_disp, IMG_W, IMG_H, CU_MAX_DISP, CU_UNIQUE_RATIO, CU_INVALID_DISP);
 	cudaMemcpyAsync(cost, d_cost, IMG_H * IMG_W * CU_MAX_DISP * sizeof(float), cudaMemcpyDeviceToHost, stream2);
 	cudaMemcpyAsync(disp, d_disp, IMG_H * IMG_W * sizeof(uchar), cudaMemcpyDeviceToHost, stream1);
+
+	cudaDeviceSynchronize();
+	printf("dp takes %lf ms\n", get_cur_ms() - be);
 }

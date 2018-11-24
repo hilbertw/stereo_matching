@@ -30,10 +30,17 @@ SGM::SGM(Mat &ll, Mat &rr) : Solver(ll, rr)
 
 void SGM::Process()
 {
+	double be = get_cur_ms();
 	Build_cost_table();
 	Build_dsi_from_table();
+	printf("build cost takes %lf ms\n", get_cur_ms() - be);
+
+	be = get_cur_ms();
 	cost_horizontal_filter(COST_WIN_W);
 	cost_vertical_filter(COST_WIN_H);
+	printf("cost filter takes %lf ms\n", get_cur_ms() - be);
+
+	be = get_cur_ms();
 
 	//Find_table_mean_max();
 	//Find_dsi_mean_max();
@@ -376,6 +383,8 @@ void SGM::Process()
 		}
 	}
 	ptr = NULL;
+
+	printf("dp takes %lf ms\n", get_cur_ms() - be);
 
 	post_filter();
 }

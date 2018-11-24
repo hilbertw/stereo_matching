@@ -25,8 +25,8 @@ int main()
 	g_sv->Process(ll, rr, disp, cost);
 	sv->fetch_cost(cost);
 	sv->fetch_disparity(disp);
-	sv->post_filter();
-	// cpu code
+	//sv->post_filter();
+	//// cpu code
 	//sv->Process();
 	double en = get_cur_ms();
 	printf("done ...\n");

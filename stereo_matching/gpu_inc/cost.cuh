@@ -18,3 +18,8 @@ __global__ void cu_cost_horizontal_filter(float *d_cost, int img_w, int img_h, i
 
 __global__ void cu_cost_vertical_filter(float *d_cost, int img_w, int img_h, int max_disp, int win_size);
 
+__global__ void cu_cost_horizontal_filter_new(float *d_cost, float *d_cost_tmp, int img_w, int img_h, int max_disp, int win_size);
+
+__global__ void cu_cost_vertical_filter_new(float *d_cost, float *d_cost_tmp, int img_w, int img_h, int max_disp, int win_size);
+
+__global__ void cu_cost_filter(float *d_cost, float *d_cost1, float *d_cost2, int img_w, int img_h, int max_disp);

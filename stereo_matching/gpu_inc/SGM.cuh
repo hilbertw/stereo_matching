@@ -1,4 +1,5 @@
 #include "../global.h"
+#include "../utils.h"
 #include "../gpu_inc/cost.cuh"
 #include "../gpu_inc/aggregation.cuh"
 

@@ -438,6 +438,9 @@ D:\opencv\build\include\opencv2/flann/defines.h
 d:\opencv\build\include\opencv2\flann\config.h
 D:\opencv\build\include\opencv2/core/affine.hpp
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\include\cuda_runtime.h
+d:\vs_project\stereo_matching\stereo_matching\gpu_inc\../utils.h
+d:\vs_project\stereo_matching\stereo_matching\global.h
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\include\cuda_runtime.h
 d:\vs_project\stereo_matching\stereo_matching\gpu_inc\../gpu_inc/cost.cuh
 d:\vs_project\stereo_matching\stereo_matching\gpu_inc\../global.h
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\include\cuda_runtime.h

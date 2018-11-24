@@ -347,6 +347,7 @@ static void speckle_filter(Mat &m, int value, int max_size, int max_dis)
 
 void Solver::post_filter()
 {
+	double be = get_cur_ms();
 	// sub-pixel
 #pragma omp parallel for
 	for (int i = 0; i < img_h; i++)
@@ -403,6 +404,7 @@ void Solver::post_filter()
 
 	// speckle_filter
 	speckle_filter(filtered_disp, INVALID_DISP, SPECKLE_SIZE, SPECKLE_DIS);
+	printf("post process takes %lf ms\n", get_cur_ms() - be);
 
 	/*
 	for (int i = 0; i < img_h; i++)
@@ -426,8 +428,8 @@ void  Solver::Colormap()
 	{
 		for (int j = 0; j < disp.cols; j++)
 		{
-			disp_value = filtered_disp.at<float>(i, j);
-			//disp_value = disp.at<uchar>(i, j);
+			//disp_value = filtered_disp.at<float>(i, j);
+			disp_value = disp.at<uchar>(i, j);
 			if (disp_value > MAX_DISP - 1)
 			{
 				colored_disp.at<Vec3b>(i, j)[0] = 0;
