@@ -61,5 +61,7 @@
     <CudaCompile Include="gpu_inc\SGM.cuh" />
     <CudaCompile Include="gpu_src\aggregation.cu" />
     <CudaCompile Include="gpu_inc\aggregation.cuh" />
+    <CudaCompile Include="gpu_src\post_filter.cu" />
+    <CudaCompile Include="gpu_inc\post_filter.cuh" />
   </ItemGroup>
 </Project>

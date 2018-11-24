@@ -2,6 +2,7 @@
 #include "../utils.h"
 #include "../gpu_inc/cost.cuh"
 #include "../gpu_inc/aggregation.cuh"
+#include "../gpu_inc/post_filter.cuh"
 
 
 const int IMG_W = 1240;
@@ -27,14 +28,13 @@ class GPU_SGM
 public:
 	GPU_SGM();
 	~GPU_SGM();
-	void Process(Mat &ll, Mat &rr, uchar *disp, float *cost);
-	void post_filter();
+	void Process(Mat &ll, Mat &rr, float *disp, float *cost);
 
 private:
 	cudaStream_t stream1, stream2, stream3, stream4, stream5, stream6, stream7, stream8;
 
 	uchar *d_ll, *d_rr;
-	uchar *d_disp, *d_colored_disp;
+	uchar *d_disp;
 	float *d_filtered_disp;
 	uint64_t *d_cost_table_l, *d_cost_table_r;
 	float *d_cost;

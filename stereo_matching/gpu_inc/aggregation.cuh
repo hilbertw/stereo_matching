@@ -21,4 +21,4 @@ __global__ void aggregation(float *d_cost_sum, float *d_L1, float *d_L2, float *
 												    short *d_L5, short *d_L6, short *d_L7, short *d_L8,
 													int img_w, int img_h, int max_disp);
 
-__global__ void wta(float *d_cost_sum, uchar *disparity, int img_w, int img_h, int max_disp, float ratio, uchar invalid);
+__global__ void wta(float *d_cost_sum, uchar *disparity, int img_w, int img_h, int max_disp, float ratio, int invalid);

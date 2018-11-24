@@ -262,7 +262,7 @@ __global__ void aggregation(float *d_cost_sum, float *d_L1, float *d_L2, float *
 }
 
 
-__global__ void wta(float *d_cost_sum, uchar *disparity, int img_w, int img_h, int max_disp, float ratio, uchar invalid)
+__global__ void wta(float *d_cost_sum, uchar *disparity, int img_w, int img_h, int max_disp, float ratio, int invalid)
 {
 	int index = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y + threadIdx.y * blockDim.x + threadIdx.x;
 	if (index > img_w * img_h - 1)  return;
@@ -270,7 +270,7 @@ __global__ void wta(float *d_cost_sum, uchar *disparity, int img_w, int img_h, i
 	int row = index / img_w;
 
 	float min_cost = FLT_MAX;
-	uchar min_d = invalid;
+	int min_d = invalid;
 	for (int d = 0; d < max_disp; d++)
 	{
 		int idx = row * img_w * max_disp + col * max_disp + d;
@@ -282,7 +282,7 @@ __global__ void wta(float *d_cost_sum, uchar *disparity, int img_w, int img_h, i
 	}
 	// unique check
 	float sec_min_cost = FLT_MAX;
-	uchar sec_min_d = invalid;
+	int sec_min_d = invalid;
 	for (int d = 0; d < max_disp; d++)
 	{
 		int idx = row * img_w * max_disp + col * max_disp + d;

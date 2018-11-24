@@ -16,16 +16,16 @@ int main()
 		
 	Solver *sv = new SGM(ll, rr);
 	GPU_SGM *g_sv = new GPU_SGM();
-	uchar *disp  = new uchar[1240 * 360];
+	float *disp  = new float[1240 * 360];
 	float *cost = new float[1240 * 360 * MAX_DISP];
 
 	printf("waiting ...\n");
 	double be = get_cur_ms();
 	// gpu code
 	g_sv->Process(ll, rr, disp, cost);
-	sv->fetch_cost(cost);
+	//sv->fetch_cost(cost);
 	sv->fetch_disparity(disp);
-	//sv->post_filter();
+	sv->post_filter();
 	//// cpu code
 	//sv->Process();
 	double en = get_cur_ms();

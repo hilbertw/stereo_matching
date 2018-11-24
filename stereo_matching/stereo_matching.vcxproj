@@ -128,6 +128,16 @@
       <FastMath>true</FastMath>
       <Optimization>O2</Optimization>
       <Runtime>MTd</Runtime>
+      <GPUDebugInfo>false</GPUDebugInfo>
+      <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
+      <CudaRuntime>Shared</CudaRuntime>
+      <InterleaveSourceInPTX>false</InterleaveSourceInPTX>
+      <UseHostInclude>false</UseHostInclude>
+      <UseHostDefines>false</UseHostDefines>
+      <HostDebugInfo>false</HostDebugInfo>
+      <TypeInfo>false</TypeInfo>
+      <Warning>W0</Warning>
+      <MaxRegCount>1000000</MaxRegCount>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -190,11 +200,13 @@
     <CudaCompile Include="gpu_inc\cost.cuh" />
     <CudaCompile Include="gpu_inc\SGM.cuh" />
     <CudaCompile Include="gpu_inc\aggregation.cuh" />
+    <CudaCompile Include="gpu_inc\post_filter.cuh" />
     <ClInclude Include="SGM.h" />
     <ClInclude Include="Solver.h" />
     <ClInclude Include="utils.h" />
     <CudaCompile Include="gpu_src\aggregation.cu" />
     <CudaCompile Include="gpu_src\cost.cu" />
+    <CudaCompile Include="gpu_src\post_filter.cu" />
     <CudaCompile Include="gpu_src\SGM.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

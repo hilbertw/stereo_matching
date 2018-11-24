@@ -255,6 +255,19 @@ void Solver::fetch_disparity(uchar *d)
 }
 
 
+void Solver::fetch_disparity(float *d)
+{
+	int cnt = 0;
+	for (int i = 0; i < filtered_disp.rows; i++)
+	{
+		for (int j = 0; j < filtered_disp.cols; j++)
+		{
+			filtered_disp.at<float>(i, j) = d[cnt++];
+		}
+	}
+}
+
+
 static void ccl_dfs(int row, int col, Mat &m, bool *visited, int *label, int *area, int label_cnt, int max_dis)
 {
 	visited[row * m.cols + col] = 1;
@@ -348,59 +361,59 @@ static void speckle_filter(Mat &m, int value, int max_size, int max_dis)
 void Solver::post_filter()
 {
 	double be = get_cur_ms();
-	// sub-pixel
-#pragma omp parallel for
-	for (int i = 0; i < img_h; i++)
-	{
-		for (int j = 0; j < img_w; j++)
-		{
-			int d = disp.at<uchar>(i, j);
-			if (d > MAX_DISP-1)
-			{
-				filtered_disp.at<float>(i, j) = INVALID_DISP;
-			}
-			else if (!d || d == MAX_DISP - 1)
-			{
-				filtered_disp.at<float>(i, j) = d;
-			}
-			else
-			{
-				int index = i * img_w * MAX_DISP + j * MAX_DISP + d;
-				float cost_d = cost[index];
-				float cost_d_sub = cost[index - 1];
-				float cost_d_plus = cost[index + 1];
-				filtered_disp.at<float>(i, j) = MIN(d + (cost_d_sub - cost_d_plus) / (2 * (cost_d_sub + cost_d_plus - 2 * cost_d)), MAX_DISP-1);
-			}
-		}
-	}
+//	// sub-pixel
+//#pragma omp parallel for
+//	for (int i = 0; i < img_h; i++)
+//	{
+//		for (int j = 0; j < img_w; j++)
+//		{
+//			int d = disp.at<uchar>(i, j);
+//			if (d > MAX_DISP-1)
+//			{
+//				filtered_disp.at<float>(i, j) = INVALID_DISP;
+//			}
+//			else if (!d || d == MAX_DISP - 1)
+//			{
+//				filtered_disp.at<float>(i, j) = d;
+//			}
+//			else
+//			{
+//				int index = i * img_w * MAX_DISP + j * MAX_DISP + d;
+//				float cost_d = cost[index];
+//				float cost_d_sub = cost[index - 1];
+//				float cost_d_plus = cost[index + 1];
+//				filtered_disp.at<float>(i, j) = MIN(d + (cost_d_sub - cost_d_plus) / (2 * (cost_d_sub + cost_d_plus - 2 * cost_d)), MAX_DISP-1);
+//			}
+//		}
+//	}
 
-	// median filter
-	vector<int> v;
-	for (int i = MEDIAN_FILTER_H / 2; i < filtered_disp.rows - MEDIAN_FILTER_H / 2; i++)
-	{
-		for (int j = MEDIAN_FILTER_W / 2; j < filtered_disp.cols - MEDIAN_FILTER_W / 2; j++)
-		{
-			if (filtered_disp.at<float>(i, j) <= MAX_DISP-1)  continue;
-			int valid_cnt = 0;
-			v.clear();
-			for (int m = i - MEDIAN_FILTER_H / 2; m <= i + MEDIAN_FILTER_H / 2; m++)
-			{
-				for (int n = j - MEDIAN_FILTER_W / 2; n <= j + MEDIAN_FILTER_W / 2; n++)
-				{
-					if (filtered_disp.at<float>(m, n) <= MAX_DISP - 1)
-					{
-						v.push_back(filtered_disp.at<float>(m, n));
-						valid_cnt++;
-					}
-				}
-			}
-			if (valid_cnt > MEDIAN_FILTER_W * MEDIAN_FILTER_H / 2)
-			{
-				sort(v.begin(), v.end());
-				filtered_disp.at<float>(i, j) = v[valid_cnt / 2];
-			}
-		}
-	}
+	//// median filter
+	//vector<int> v;
+	//for (int i = MEDIAN_FILTER_H / 2; i < filtered_disp.rows - MEDIAN_FILTER_H / 2; i++)
+	//{
+	//	for (int j = MEDIAN_FILTER_W / 2; j < filtered_disp.cols - MEDIAN_FILTER_W / 2; j++)
+	//	{
+	//		if (filtered_disp.at<float>(i, j) <= MAX_DISP-1)  continue;
+	//		int valid_cnt = 0;
+	//		v.clear();
+	//		for (int m = i - MEDIAN_FILTER_H / 2; m <= i + MEDIAN_FILTER_H / 2; m++)
+	//		{
+	//			for (int n = j - MEDIAN_FILTER_W / 2; n <= j + MEDIAN_FILTER_W / 2; n++)
+	//			{
+	//				if (filtered_disp.at<float>(m, n) <= MAX_DISP - 1)
+	//				{
+	//					v.push_back(filtered_disp.at<float>(m, n));
+	//					valid_cnt++;
+	//				}
+	//			}
+	//		}
+	//		if (valid_cnt > MEDIAN_FILTER_W * MEDIAN_FILTER_H / 2)
+	//		{
+	//			sort(v.begin(), v.end());
+	//			filtered_disp.at<float>(i, j) = v[valid_cnt / 2];
+	//		}
+	//	}
+	//}
 
 	// speckle_filter
 	speckle_filter(filtered_disp, INVALID_DISP, SPECKLE_SIZE, SPECKLE_DIS);
@@ -428,8 +441,8 @@ void  Solver::Colormap()
 	{
 		for (int j = 0; j < disp.cols; j++)
 		{
-			//disp_value = filtered_disp.at<float>(i, j);
-			disp_value = disp.at<uchar>(i, j);
+			disp_value = filtered_disp.at<float>(i, j);
+			//disp_value = disp.at<uchar>(i, j);
 			if (disp_value > MAX_DISP - 1)
 			{
 				colored_disp.at<Vec3b>(i, j)[0] = 0;

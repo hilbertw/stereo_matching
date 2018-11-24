@@ -16,6 +16,8 @@ GPU_SGM::GPU_SGM()
 	checkCudaErrors(cudaMalloc((void**)&d_ll, IMG_H* IMG_W * sizeof(uchar)));
 	checkCudaErrors(cudaMalloc((void**)&d_rr, IMG_H * IMG_W * sizeof(uchar)));
 	checkCudaErrors(cudaMalloc((void**)&d_disp, IMG_H * IMG_W * sizeof(uchar)));
+	checkCudaErrors(cudaMalloc((void**)&d_filtered_disp, IMG_H * IMG_W * sizeof(float)));
+
 	checkCudaErrors(cudaMalloc((void**)&d_cost_table_l, IMG_H * IMG_W * sizeof(uint64_t)));
 	checkCudaErrors(cudaMalloc((void**)&d_cost_table_r, IMG_H * IMG_W * sizeof(uint64_t)));
 	checkCudaErrors(cudaMalloc((void**)&d_cost, IMG_H * IMG_W * CU_MAX_DISP * sizeof(float)));
@@ -49,6 +51,8 @@ GPU_SGM::~GPU_SGM()
 	checkCudaErrors(cudaFree(d_ll));
 	checkCudaErrors(cudaFree(d_rr));
 	checkCudaErrors(cudaFree(d_disp));
+	checkCudaErrors(cudaFree(d_filtered_disp));
+
 	checkCudaErrors(cudaFree(d_cost_table_l));
 	checkCudaErrors(cudaFree(d_cost_table_r));
 	checkCudaErrors(cudaFree(d_cost));
@@ -238,7 +242,7 @@ __global__ void warmup()
 {}
 
 
-void GPU_SGM::Process(Mat &ll, Mat &rr, uchar *disp, float *cost)
+void GPU_SGM::Process(Mat &ll, Mat &rr, float *disp, float *cost)
 {
 	cudaSetDevice(0);
 	warmup << <512, 512 >> >();  // warm up 
@@ -263,8 +267,6 @@ void GPU_SGM::Process(Mat &ll, Mat &rr, uchar *disp, float *cost)
 
 	be = get_cur_ms();
 
-	//cu_cost_filter_new << <grid, block, 0, stream1 >> > (d_cost, IMG_W, IMG_H, CU_MAX_DISP, CU_COST_WIN_W, CU_COST_WIN_H);
-
 	grid.x = (IMG_W - 1) / 32 + 1;
 	grid.y = (CU_MAX_DISP - 1) / 32 + 1;
 	cu_cost_horizontal_filter << <grid, block, 0, stream1 >> > (d_cost, IMG_W, IMG_H, CU_MAX_DISP, CU_COST_WIN_W);
@@ -281,8 +283,6 @@ void GPU_SGM::Process(Mat &ll, Mat &rr, uchar *disp, float *cost)
 
 	be = get_cur_ms();
 
-	grid.x = 512;
-	grid.y = 512;
 	dim3 dp_grid, dp_block;
 	dp_grid.x = IMG_W;
 	dp_grid.y = 1;
@@ -303,23 +303,28 @@ void GPU_SGM::Process(Mat &ll, Mat &rr, uchar *disp, float *cost)
 			cu_dp_L8 << <dp_grid, dp_block, 0, stream8 >> > (d_cost, d_L8, d_min_L8, IMG_H - 1 - i, IMG_W, IMG_H, CU_MAX_DISP, P1, P2);
 		}
 	}
-	cudaStreamSynchronize(stream1);
-	cudaStreamSynchronize(stream2);
-	cudaStreamSynchronize(stream3);
-	cudaStreamSynchronize(stream4);
-	cudaStreamSynchronize(stream5);
-	cudaStreamSynchronize(stream6);
-	cudaStreamSynchronize(stream7);
-	cudaStreamSynchronize(stream8);
-	aggregation << <grid, block, 0, stream1 >> > (d_cost, d_L1, d_L2, d_L3, d_L4, d_L5, d_L6, d_L7, d_L8, IMG_W, IMG_H, CU_MAX_DISP);
-	cudaStreamSynchronize(stream1);
-
-	grid.x = (IMG_W - 1) / 32 + 1;
-	grid.y = (IMG_H - 1) / 32 + 1;
-	wta<<<grid, block, 0, stream1>>>(d_cost, d_disp, IMG_W, IMG_H, CU_MAX_DISP, CU_UNIQUE_RATIO, CU_INVALID_DISP);
-	cudaMemcpyAsync(cost, d_cost, IMG_H * IMG_W * CU_MAX_DISP * sizeof(float), cudaMemcpyDeviceToHost, stream2);
-	cudaMemcpyAsync(disp, d_disp, IMG_H * IMG_W * sizeof(uchar), cudaMemcpyDeviceToHost, stream1);
-
 	cudaDeviceSynchronize();
 	printf("dp takes %lf ms\n", get_cur_ms() - be);
+
+	be = get_cur_ms();
+
+	grid.x = 512;
+	grid.y = 512;
+	aggregation << <grid, block, 0, stream1 >> > (d_cost, d_L1, d_L2, d_L3, d_L4, d_L5, d_L6, d_L7, d_L8, IMG_W, IMG_H, CU_MAX_DISP);
+	grid.x = (IMG_W - 1) / 32 + 1;
+	grid.y = (IMG_H - 1) / 32 + 1;
+	wta << <grid, block, 0, stream1 >> >(d_cost, d_disp, IMG_W, IMG_H, CU_MAX_DISP, CU_UNIQUE_RATIO, CU_INVALID_DISP);
+
+	cudaDeviceSynchronize();
+	printf("wta takes %lf ms\n", get_cur_ms() - be);
+
+	be = get_cur_ms();
+
+	cu_subpixel << <grid, block, 0, stream1 >> > (d_cost, d_disp, d_filtered_disp, IMG_W, IMG_H, CU_MAX_DISP, CU_INVALID_DISP);
+	cu_mean_filter << <grid, block, 0, stream1 >> > (d_filtered_disp, IMG_W, IMG_H, CU_MAX_DISP, CU_MEDIAN_FILTER_W, CU_MEDIAN_FILTER_H);
+
+	cudaDeviceSynchronize();
+	printf("cuda post_filter takes %lf ms\n", get_cur_ms() - be);
+
+	cudaMemcpyAsync(disp, d_filtered_disp, IMG_H * IMG_W * sizeof(float), cudaMemcpyDeviceToHost, stream1);
 }
