@@ -1,47 +1,65 @@
-#include "global.h"
-#include "GM.h"
-#include "SGM.h"
-#include "utils.h"
-#include "gpu_inc\SGM.cuh"
-#include "gpu_inc\cost.cuh"
+#include "cpu_inc/global.h"
+#include "cpu_inc/GM.h"
+#include "cpu_inc/SGM.h"
+#include "cpu_inc/utils.h"
+#include "gpu_inc/SGM.cuh"
+#include "gpu_inc/cost.cuh"
 
 
 int main()
 {
-	Mat ll = imread("example/kitti_1_left.png", IMREAD_GRAYSCALE);
-	Mat rr = imread("example/kitti_1_right.png", IMREAD_GRAYSCALE);
-	resize(ll, ll, Size(1240, 360));
-	resize(rr, rr, Size(1240, 360));
-	printf("rows: %d, cols:%d\n", ll.rows, ll.cols);
-		
-	Solver *sv = new SGM(ll, rr);
-	GPU_SGM *g_sv = new GPU_SGM();
-	float *disp  = new float[1240 * 360];
-	float *cost = new float[1240 * 360 * MAX_DISP];
+	Mat disp;
+	if (!USE_GPU)
+	{
+		Solver *sv = new SGM();
 
-	printf("waiting ...\n");
-	double be = get_cur_ms();
-	// gpu code
-	g_sv->Process(ll, rr, disp, cost);
-	//sv->fetch_cost(cost);
-	sv->fetch_disparity(disp);
-	sv->post_filter();
-	//// cpu code
-	//sv->Process();
-	double en = get_cur_ms();
-	printf("done ...\n");
-	printf("time cost: %lf ms\n", en - be);
-	sv->Show_disp();
-	//Mat disp = sv->get_disp();
+		for (int cnt = 0; cnt < 1; cnt++)
+		{
+			Mat img_l = imread("example/kitti_0_left.png", IMREAD_GRAYSCALE);
+			Mat img_r = imread("example/kitti_0_right.png", IMREAD_GRAYSCALE);
+			resize(img_l, img_l, Size(IMG_W, IMG_H));
+			resize(img_r, img_r, Size(IMG_W, IMG_H));
+			printf("waiting ...\n");
 
-	delete sv;
+			double be = get_cur_ms();
+			sv->process(img_l, img_r);
+			double en = get_cur_ms();
+			printf("done ...\n");
+			printf("time cost: %lf ms\n", en - be);
+			sv->show_disp();
+		}
+		disp = sv->get_disp();
+		delete sv;
+	}
+	else
+	{
+		GPU_SGM *g_sv = new GPU_SGM();
+
+		for (int cnt = 0; cnt < 1; cnt++)
+		{
+			Mat img_l = imread("example/kitti_0_left.png", IMREAD_GRAYSCALE);
+			Mat img_r = imread("example/kitti_0_right.png", IMREAD_GRAYSCALE);
+			resize(img_l, img_l, Size(IMG_W, IMG_H));
+			resize(img_r, img_r, Size(IMG_W, IMG_H));
+			printf("waiting ...\n");
+
+			double be = get_cur_ms();
+			g_sv->process(img_l, img_r);
+			double en = get_cur_ms();
+			printf("done ...\n");
+			printf("time cost: %lf ms\n", en - be);
+			g_sv->show_disp();
+		}
+		disp = g_sv->get_disp();
+		delete g_sv;
+	}
 
 	/*
-	Mat ll_rgb = imread("example/left_1.png");
+	Mat rgb_l = imread("example/left_0.png");
 
 	// read calibration
 	std::ifstream in;
-	in.open("example/calib_1.txt");
+	in.open("example/calib_0.txt");
 	if (!in.is_open()){
 		printf("reading calib file failed\n");
 		std::cin.get();
@@ -140,9 +158,9 @@ int main()
 				{
 					int u = MAX(MIN(int((Xc[i*disp.cols + j] + left_right_range/2) / map_scale), bird_view.cols - 1), 0);
 					int v = MAX(MIN(int((front_range - Zc[i*disp.cols + j]) / map_scale), bird_view.rows - 1), 0);
-					bird_view.at<Vec3b>(v, u)[0] = ll_rgb.at<Vec3b>(i, j)[0];
-					bird_view.at<Vec3b>(v, u)[1] = ll_rgb.at<Vec3b>(i, j)[1];
-					bird_view.at<Vec3b>(v, u)[2] = ll_rgb.at<Vec3b>(i, j)[2];
+					bird_view.at<Vec3b>(v, u)[0] = rgb_l.at<Vec3b>(i, j)[0];
+					bird_view.at<Vec3b>(v, u)[1] = rgb_l.at<Vec3b>(i, j)[1];
+					bird_view.at<Vec3b>(v, u)[2] = rgb_l.at<Vec3b>(i, j)[2];
 				}
 			}
 		}
@@ -154,7 +172,7 @@ int main()
 	// write file for meshlab visualization
 	printf("generating data file ...\n");
 	std::ofstream out;
-	out.open("example/pt_1.txt");
+	out.open("example/pt_0.txt");
 	for (int i = 0; i < disp.rows; i++)
 	{
 		for (int j = 0; j < disp.cols; j++)
@@ -165,9 +183,9 @@ int main()
 				{
 					std::stringstream ss;
 					string str;
-					int R_value = ll_rgb.at<Vec3b>(i, j)[2];
-					int G_value = ll_rgb.at<Vec3b>(i, j)[1];
-					int B_value = ll_rgb.at<Vec3b>(i, j)[0];
+					int R_value = rgb_l.at<Vec3b>(i, j)[2];
+					int G_value = rgb_l.at<Vec3b>(i, j)[1];
+					int B_value = rgb_l.at<Vec3b>(i, j)[0];
 					ss << Xc[i*disp.cols + j] << ";" << Yc[i*disp.cols + j] << ";" << Zc[i*disp.cols + j] << ";"
 						<< R_value << ";" << G_value << ";" << B_value << ";"  << std::endl;
 					str = ss.str();

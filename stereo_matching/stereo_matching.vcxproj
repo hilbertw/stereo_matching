@@ -186,28 +186,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="cost.cpp" />
-    <ClCompile Include="GM.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="SGM.cpp" />
-    <ClCompile Include="Solver.cpp" />
-    <ClCompile Include="utils.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="cost.h" />
-    <ClInclude Include="global.h" />
-    <ClInclude Include="GM.h" />
     <CudaCompile Include="gpu_inc\cost.cuh" />
     <CudaCompile Include="gpu_inc\SGM.cuh" />
     <CudaCompile Include="gpu_inc\aggregation.cuh" />
     <CudaCompile Include="gpu_inc\post_filter.cuh" />
-    <ClInclude Include="SGM.h" />
-    <ClInclude Include="Solver.h" />
-    <ClInclude Include="utils.h" />
     <CudaCompile Include="gpu_src\aggregation.cu" />
     <CudaCompile Include="gpu_src\cost.cu" />
     <CudaCompile Include="gpu_src\post_filter.cu" />
     <CudaCompile Include="gpu_src\SGM.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cpu_inc\cost.h" />
+    <ClInclude Include="cpu_inc\global.h" />
+    <ClInclude Include="cpu_inc\GM.h" />
+    <ClInclude Include="cpu_inc\SGM.h" />
+    <ClInclude Include="cpu_inc\Solver.h" />
+    <ClInclude Include="cpu_inc\utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cpu_src\cost.cpp" />
+    <ClCompile Include="cpu_src\GM.cpp" />
+    <ClCompile Include="cpu_src\SGM.cpp" />
+    <ClCompile Include="cpu_src\Solver.cpp" />
+    <ClCompile Include="cpu_src\utils.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

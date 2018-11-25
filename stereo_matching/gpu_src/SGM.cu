@@ -13,43 +13,50 @@ GPU_SGM::GPU_SGM()
 	checkCudaErrors(cudaStreamCreate(&stream7));
 	checkCudaErrors(cudaStreamCreate(&stream8));
 
-	checkCudaErrors(cudaMalloc((void**)&d_ll, IMG_H* IMG_W * sizeof(uchar)));
-	checkCudaErrors(cudaMalloc((void**)&d_rr, IMG_H * IMG_W * sizeof(uchar)));
+	checkCudaErrors(cudaMalloc((void**)&d_img_l, IMG_H* IMG_W * sizeof(uchar)));
+	checkCudaErrors(cudaMalloc((void**)&d_img_r, IMG_H * IMG_W * sizeof(uchar)));
 	checkCudaErrors(cudaMalloc((void**)&d_disp, IMG_H * IMG_W * sizeof(uchar)));
 	checkCudaErrors(cudaMalloc((void**)&d_filtered_disp, IMG_H * IMG_W * sizeof(float)));
 
 	checkCudaErrors(cudaMalloc((void**)&d_cost_table_l, IMG_H * IMG_W * sizeof(uint64_t)));
 	checkCudaErrors(cudaMalloc((void**)&d_cost_table_r, IMG_H * IMG_W * sizeof(uint64_t)));
-	checkCudaErrors(cudaMalloc((void**)&d_cost, IMG_H * IMG_W * CU_MAX_DISP * sizeof(float)));
+	checkCudaErrors(cudaMalloc((void**)&d_cost, IMG_H * IMG_W * MAX_DISP * sizeof(float)));
 
-	checkCudaErrors(cudaMalloc((void**)&d_L1, IMG_H * IMG_W * CU_MAX_DISP * sizeof(float)));
-	checkCudaErrors(cudaMalloc((void**)&d_L2, IMG_H * IMG_W * CU_MAX_DISP * sizeof(float)));
+	checkCudaErrors(cudaMalloc((void**)&d_L1, IMG_H * IMG_W * MAX_DISP * sizeof(float)));
+	checkCudaErrors(cudaMalloc((void**)&d_L2, IMG_H * IMG_W * MAX_DISP * sizeof(float)));
 	checkCudaErrors(cudaMalloc((void**)&d_min_L1, IMG_H * IMG_W * sizeof(float)));
 	checkCudaErrors(cudaMalloc((void**)&d_min_L2, IMG_H * IMG_W * sizeof(float)));
-	checkCudaErrors(cudaMalloc((void**)&d_L3, IMG_H * IMG_W * CU_MAX_DISP * sizeof(float)));
-	checkCudaErrors(cudaMalloc((void**)&d_L4, IMG_H * IMG_W * CU_MAX_DISP * sizeof(float)));
+	checkCudaErrors(cudaMalloc((void**)&d_L3, IMG_H * IMG_W * MAX_DISP * sizeof(float)));
+	checkCudaErrors(cudaMalloc((void**)&d_L4, IMG_H * IMG_W * MAX_DISP * sizeof(float)));
 	checkCudaErrors(cudaMalloc((void**)&d_min_L3, IMG_H * IMG_W * sizeof(float)));
 	checkCudaErrors(cudaMalloc((void**)&d_min_L4, IMG_H * IMG_W * sizeof(float)));
 
-	checkCudaErrors(cudaMalloc((void**)&d_L5, IMG_H * IMG_W * CU_MAX_DISP * sizeof(short)));
-	checkCudaErrors(cudaMalloc((void**)&d_L6, IMG_H * IMG_W * CU_MAX_DISP * sizeof(short)));
+	checkCudaErrors(cudaMalloc((void**)&d_L5, IMG_H * IMG_W * MAX_DISP * sizeof(short)));
+	checkCudaErrors(cudaMalloc((void**)&d_L6, IMG_H * IMG_W * MAX_DISP * sizeof(short)));
 	checkCudaErrors(cudaMalloc((void**)&d_min_L5, IMG_H * IMG_W * sizeof(float)));
 	checkCudaErrors(cudaMalloc((void**)&d_min_L6, IMG_H * IMG_W * sizeof(float)));
-	checkCudaErrors(cudaMalloc((void**)&d_L7, IMG_H * IMG_W * CU_MAX_DISP * sizeof(short)));
-	checkCudaErrors(cudaMalloc((void**)&d_L8, IMG_H * IMG_W * CU_MAX_DISP * sizeof(short)));
+	checkCudaErrors(cudaMalloc((void**)&d_L7, IMG_H * IMG_W * MAX_DISP * sizeof(short)));
+	checkCudaErrors(cudaMalloc((void**)&d_L8, IMG_H * IMG_W * MAX_DISP * sizeof(short)));
 	checkCudaErrors(cudaMalloc((void**)&d_min_L7, IMG_H * IMG_W * sizeof(float)));
 	checkCudaErrors(cudaMalloc((void**)&d_min_L8, IMG_H * IMG_W * sizeof(float)));
 
 	P1 = 10;
 	P2 = 100;
+
+	checkCudaErrors(cudaMalloc((void**)&d_label, IMG_H * IMG_W * sizeof(int)));
+	checkCudaErrors(cudaMalloc((void**)&d_area, IMG_H * IMG_W * sizeof(int)));
+
+	disp.create(IMG_H, IMG_W, CV_8UC1);
+	filtered_disp.create(IMG_H, IMG_W, CV_32FC1);
+	colored_disp.create(IMG_H, IMG_W, CV_8UC3);
 }
 
 
 
 GPU_SGM::~GPU_SGM()
 {
-	checkCudaErrors(cudaFree(d_ll));
-	checkCudaErrors(cudaFree(d_rr));
+	checkCudaErrors(cudaFree(d_img_l));
+	checkCudaErrors(cudaFree(d_img_r));
 	checkCudaErrors(cudaFree(d_disp));
 	checkCudaErrors(cudaFree(d_filtered_disp));
 
@@ -75,6 +82,9 @@ GPU_SGM::~GPU_SGM()
 	checkCudaErrors(cudaFree(d_min_L7));
 	checkCudaErrors(cudaFree(d_min_L8));
 
+	checkCudaErrors(cudaFree(d_label));
+	checkCudaErrors(cudaFree(d_area));
+
 	checkCudaErrors(cudaStreamDestroy(stream1));
 	checkCudaErrors(cudaStreamDestroy(stream2));
 	checkCudaErrors(cudaStreamDestroy(stream3));
@@ -86,169 +96,14 @@ GPU_SGM::~GPU_SGM()
 }
 
 
-static void ccl_dfs(int row, int col, Mat &m, bool *visited, int *label, int *area, int label_cnt, int max_dis)
+void GPU_SGM::process(Mat &img_l, Mat &img_r)
 {
-	visited[row * m.cols + col] = 1;
-
-	if (row > 0 && fabs(m.at<float>(row, col) - m.at<float>(row - 1, col)) < max_dis)
-	{
-		if (!visited[(row - 1) * m.cols + col])
-		{
-			label[(row - 1) * m.cols + col] = label_cnt;
-			++area[label_cnt];
-			//printf("1: %d, %d; ", row-1, col);
-			ccl_dfs(row - 1, col, m, visited, label, area, label_cnt, max_dis);
-		}
-	}
-	if (row < m.rows - 1 && fabs(m.at<float>(row, col) - m.at<float>(row + 1, col)) < max_dis)
-	{
-		if (!visited[(row + 1) * m.cols + col])
-		{
-			label[(row + 1) * m.cols + col] = label_cnt;
-			++area[label_cnt];
-			//printf("2: %d, %d; ", row+1, col);
-			ccl_dfs(row + 1, col, m, visited, label, area, label_cnt, max_dis);
-		}
-	}
-	if (col > 0 && fabs(m.at<float>(row, col) - m.at<float>(row, col - 1)) < max_dis)
-	{
-		if (!visited[row * m.cols + col - 1])
-		{
-			label[row * m.cols + col - 1] = label_cnt;
-			++area[label_cnt];
-			//printf("3: %d, %d; ", row, col-1);
-			ccl_dfs(row, col - 1, m, visited, label, area, label_cnt, max_dis);
-		}
-	}
-	if (col < m.cols - 1 && fabs(m.at<float>(row, col) - m.at<float>(row, col + 1)) < max_dis)
-	{
-		if (!visited[row * m.cols + col + 1])
-		{
-			label[row * m.cols + col + 1] = label_cnt;
-			++area[label_cnt];
-			//printf("4: %d, %d; ", row, col+1);
-			ccl_dfs(row, col + 1, m, visited, label, area, label_cnt, max_dis);
-		}
-	}
-	return;
-}
-
-
-static void speckle_filter(Mat &m, int value, int max_size, int max_dis)
-{
-	bool *visited = new bool[m.rows * m.cols];
-	int *label = new int[m.rows * m.cols];
-	int *area = new int[m.rows * m.cols];
-	for (int i = 0; i < m.rows * m.cols; i++)
-	{
-		visited[i] = 0;
-		label[i] = 0;
-		area[i] = 0;
-	}
-
-	int label_cnt = 0;
-	for (int i = 0; i < m.rows; i++)
-	{
-		for (int j = 0; j < m.cols; j++)
-		{
-			if (visited[i * m.cols + j])  continue;
-
-			label[i*m.cols + j] = ++label_cnt;
-			++area[label_cnt];
-			ccl_dfs(i, j, m, visited, label, area, label_cnt, max_dis);
-		}
-	}
-
-	for (int i = 0; i < m.rows; i++)
-	{
-		for (int j = 0; j < m.cols; j++)
-		{
-			if (area[label[i*m.cols + j]] <= max_size)
-			{
-				m.at<float>(i, j) = value;
-			}
-		}
-	}
-
-	delete[] visited;
-	delete[] label;
-	delete[] area;
-}
-
-/*
-void GPU_SGM::post_filter()
-{
-	// sub-pixel
-#pragma omp parallel for
-	for (int i = 0; i < IMG_H; i++)
-	{
-		for (int j = 0; j < IMG_W; j++)
-		{
-			int d = disp.at<uchar>(i, j);
-			if (d > CU_MAX_DISP - 1)
-			{
-				filtered_disp.at<float>(i, j) = CU_INVALID_DISP;
-			}
-			else if (!d || d == CU_MAX_DISP - 1)
-			{
-				filtered_disp.at<float>(i, j) = d;
-			}
-			else
-			{
-				int index = i * IMG_W * CU_MAX_DISP + j * CU_MAX_DISP + d;
-				float cost_d = cost[index];
-				float cost_d_sub = cost[index - 1];
-				float cost_d_plus = cost[index + 1];
-				filtered_disp.at<float>(i, j) = MIN(d + (cost_d_sub - cost_d_plus) / (2 * (cost_d_sub + cost_d_plus - 2 * cost_d)), CU_MAX_DISP - 1);
-			}
-		}
-	}
-
-	// median filter
-	vector<int> v;
-	for (int i = CU_MEDIAN_FILTER_H / 2; i < filtered_disp.rows - CU_MEDIAN_FILTER_H / 2; i++)
-	{
-		for (int j = CU_MEDIAN_FILTER_W / 2; j < filtered_disp.cols - CU_MEDIAN_FILTER_W / 2; j++)
-		{
-			if (filtered_disp.at<float>(i, j) <= CU_MAX_DISP - 1)  continue;
-			int valid_cnt = 0;
-			v.clear();
-			for (int m = i - CU_MEDIAN_FILTER_H / 2; m <= i + CU_MEDIAN_FILTER_H / 2; m++)
-			{
-				for (int n = j - CU_MEDIAN_FILTER_W / 2; n <= j + CU_MEDIAN_FILTER_W / 2; n++)
-				{
-					if (filtered_disp.at<float>(m, n) <= CU_MAX_DISP - 1)
-					{
-						v.push_back(filtered_disp.at<float>(m, n));
-						valid_cnt++;
-					}
-				}
-			}
-			if (valid_cnt > CU_MEDIAN_FILTER_W * CU_MEDIAN_FILTER_H / 2)
-			{
-				sort(v.begin(), v.end());
-				filtered_disp.at<float>(i, j) = v[valid_cnt / 2];
-			}
-		}
-	}
-
-	// speckle_filter
-	speckle_filter(filtered_disp, CU_INVALID_DISP, CU_SPECKLE_SIZE, CU_SPECKLE_DIS);
-}
-*/
-
-
-__global__ void warmup()
-{}
-
-
-void GPU_SGM::Process(Mat &ll, Mat &rr, float *disp, float *cost)
-{
+	this->img_l = img_l;
+	this->img_r = img_r;
 	cudaSetDevice(0);
-	warmup << <512, 512 >> >();  // warm up 
 
-	cudaMemcpyAsync(d_ll, ll.data, IMG_H* IMG_W * sizeof(uchar), cudaMemcpyHostToDevice, stream1);
-	cudaMemcpyAsync(d_rr, rr.data, IMG_H* IMG_W * sizeof(uchar), cudaMemcpyHostToDevice, stream2);
+	cudaMemcpyAsync(d_img_l, img_l.data, IMG_H* IMG_W * sizeof(uchar), cudaMemcpyHostToDevice, stream1);
+	cudaMemcpyAsync(d_img_r, img_r.data, IMG_H* IMG_W * sizeof(uchar), cudaMemcpyHostToDevice, stream2);
 	cudaStreamSynchronize(stream1);
 	cudaStreamSynchronize(stream2);
 
@@ -259,8 +114,8 @@ void GPU_SGM::Process(Mat &ll, Mat &rr, float *disp, float *cost)
 	grid.y = (IMG_H - 1) / 32 + 1;
 	block.x = 32;
 	block.y = 32;
-	cu_Build_cost_table << <grid, block, 0, stream1 >> > (d_ll, d_rr, d_cost_table_l, d_cost_table_r, IMG_W, IMG_H, CU_WIN_W, CU_WIN_H);
-	cu_Build_dsi_from_table << <grid, block, 0, stream1 >> > (d_cost_table_l, d_cost_table_r, d_cost, IMG_W, IMG_H, CU_MAX_DISP);
+	cu_build_cost_table << <grid, block, 0, stream1 >> > (d_img_l, d_img_r, d_cost_table_l, d_cost_table_r, IMG_W, IMG_H, CU_WIN_W, CU_WIN_H);
+	cu_build_dsi_from_table << <grid, block, 0, stream1 >> > (d_cost_table_l, d_cost_table_r, d_cost, IMG_W, IMG_H, MAX_DISP);
 
 	cudaDeviceSynchronize();
 	printf("build cost takes %lf ms\n", get_cur_ms() - be);
@@ -268,15 +123,15 @@ void GPU_SGM::Process(Mat &ll, Mat &rr, float *disp, float *cost)
 	be = get_cur_ms();
 
 	grid.x = (IMG_W - 1) / 32 + 1;
-	grid.y = (CU_MAX_DISP - 1) / 32 + 1;
-	cu_cost_horizontal_filter << <grid, block, 0, stream1 >> > (d_cost, IMG_W, IMG_H, CU_MAX_DISP, CU_COST_WIN_W);
-	cu_cost_vertical_filter << <grid, block, 0, stream1 >> > (d_cost, IMG_W, IMG_H, CU_MAX_DISP, CU_COST_WIN_H);
+	grid.y = (MAX_DISP - 1) / 32 + 1;
+	cu_cost_horizontal_filter << <grid, block, 0, stream1 >> > (d_cost, IMG_W, IMG_H, MAX_DISP, CU_COST_WIN_W);
+	cu_cost_vertical_filter << <grid, block, 0, stream1 >> > (d_cost, IMG_W, IMG_H, MAX_DISP, CU_COST_WIN_H);
 
-	//cu_cost_horizontal_filter_new << <grid, block, 0, stream1 >> > (d_cost, d_L1, IMG_W, IMG_H, CU_MAX_DISP, CU_COST_WIN_W);
-	//cu_cost_vertical_filter_new << <grid, block, 0, stream2 >> > (d_cost, d_L2, IMG_W, IMG_H, CU_MAX_DISP, CU_COST_WIN_H);
+	//cu_cost_horizontal_filter_new << <grid, block, 0, stream1 >> > (d_cost, d_L1, IMG_W, IMG_H, MAX_DISP, CU_COST_WIN_W);
+	//cu_cost_vertical_filter_new << <grid, block, 0, stream2 >> > (d_cost, d_L2, IMG_W, IMG_H, MAX_DISP, CU_COST_WIN_H);
 	//cudaStreamSynchronize(stream1);
 	//cudaStreamSynchronize(stream2);
-	//cu_cost_filter << <grid, block, 0, stream1 >> > (d_cost, d_L1, d_L2, IMG_W, IMG_H, CU_MAX_DISP);
+	//cu_cost_filter << <grid, block, 0, stream1 >> > (d_cost, d_L1, d_L2, IMG_W, IMG_H, MAX_DISP);
 
 	cudaDeviceSynchronize();
 	printf("cost filter takes %lf ms\n", get_cur_ms() - be);
@@ -286,21 +141,21 @@ void GPU_SGM::Process(Mat &ll, Mat &rr, float *disp, float *cost)
 	dim3 dp_grid, dp_block;
 	dp_grid.x = IMG_W;
 	dp_grid.y = 1;
-	dp_block.x = CU_MAX_DISP;  // for dp syncronize
+	dp_block.x = MAX_DISP;  // for dp syncronize
 	dp_block.y = 1;
 
-	cu_dp_L1 << <dp_grid, dp_block, 0, stream1 >> > (d_cost, d_L1, d_min_L1, IMG_W, IMG_H, CU_MAX_DISP, P1, P2);
-	cu_dp_L2 << <dp_grid, dp_block, 0, stream2 >> > (d_cost, d_L2, d_min_L2, IMG_W, IMG_H, CU_MAX_DISP, P1, P2);
-	cu_dp_L3 << <dp_grid, dp_block, 0, stream3 >> > (d_cost, d_L3, d_min_L3, IMG_W, IMG_H, CU_MAX_DISP, P1, P2);
-	cu_dp_L4 << <dp_grid, dp_block, 0, stream4 >> > (d_cost, d_L4, d_min_L4, IMG_W, IMG_H, CU_MAX_DISP, P1, P2);
+	cu_dp_L1 << <dp_grid, dp_block, 0, stream1 >> > (d_cost, d_L1, d_min_L1, IMG_W, IMG_H, MAX_DISP, P1, P2);
+	cu_dp_L2 << <dp_grid, dp_block, 0, stream2 >> > (d_cost, d_L2, d_min_L2, IMG_W, IMG_H, MAX_DISP, P1, P2);
+	cu_dp_L3 << <dp_grid, dp_block, 0, stream3 >> > (d_cost, d_L3, d_min_L3, IMG_W, IMG_H, MAX_DISP, P1, P2);
+	cu_dp_L4 << <dp_grid, dp_block, 0, stream4 >> > (d_cost, d_L4, d_min_L4, IMG_W, IMG_H, MAX_DISP, P1, P2);
 	if (CU_USE_8_PATH)
 	{
 		for (int i = 0; i < IMG_H; i++)
 		{
-			cu_dp_L5 << <dp_grid, dp_block, 0, stream5 >> > (d_cost, d_L5, d_min_L5, i, IMG_W, IMG_H, CU_MAX_DISP, P1, P2);
-			cu_dp_L6 << <dp_grid, dp_block, 0, stream6 >> > (d_cost, d_L6, d_min_L6, i, IMG_W, IMG_H, CU_MAX_DISP, P1, P2);
-			cu_dp_L7 << <dp_grid, dp_block, 0, stream7 >> > (d_cost, d_L7, d_min_L7, IMG_H - 1 - i, IMG_W, IMG_H, CU_MAX_DISP, P1, P2);
-			cu_dp_L8 << <dp_grid, dp_block, 0, stream8 >> > (d_cost, d_L8, d_min_L8, IMG_H - 1 - i, IMG_W, IMG_H, CU_MAX_DISP, P1, P2);
+			cu_dp_L5 << <dp_grid, dp_block, 0, stream5 >> > (d_cost, d_L5, d_min_L5, i, IMG_W, IMG_H, MAX_DISP, P1, P2);
+			cu_dp_L6 << <dp_grid, dp_block, 0, stream6 >> > (d_cost, d_L6, d_min_L6, i, IMG_W, IMG_H, MAX_DISP, P1, P2);
+			cu_dp_L7 << <dp_grid, dp_block, 0, stream7 >> > (d_cost, d_L7, d_min_L7, IMG_H - 1 - i, IMG_W, IMG_H, MAX_DISP, P1, P2);
+			cu_dp_L8 << <dp_grid, dp_block, 0, stream8 >> > (d_cost, d_L8, d_min_L8, IMG_H - 1 - i, IMG_W, IMG_H, MAX_DISP, P1, P2);
 		}
 	}
 	cudaDeviceSynchronize();
@@ -310,21 +165,121 @@ void GPU_SGM::Process(Mat &ll, Mat &rr, float *disp, float *cost)
 
 	grid.x = 512;
 	grid.y = 512;
-	aggregation << <grid, block, 0, stream1 >> > (d_cost, d_L1, d_L2, d_L3, d_L4, d_L5, d_L6, d_L7, d_L8, IMG_W, IMG_H, CU_MAX_DISP);
+	aggregation << <grid, block, 0, stream1 >> > (d_cost, d_L1, d_L2, d_L3, d_L4, d_L5, d_L6, d_L7, d_L8, IMG_W, IMG_H, MAX_DISP);
 	grid.x = (IMG_W - 1) / 32 + 1;
 	grid.y = (IMG_H - 1) / 32 + 1;
-	wta << <grid, block, 0, stream1 >> >(d_cost, d_disp, IMG_W, IMG_H, CU_MAX_DISP, CU_UNIQUE_RATIO, CU_INVALID_DISP);
+	wta << <grid, block, 0, stream1 >> >(d_cost, d_disp, IMG_W, IMG_H, MAX_DISP, CU_UNIQUE_RATIO, INVALID_DISP);
 
 	cudaDeviceSynchronize();
 	printf("wta takes %lf ms\n", get_cur_ms() - be);
 
 	be = get_cur_ms();
 
-	cu_subpixel << <grid, block, 0, stream1 >> > (d_cost, d_disp, d_filtered_disp, IMG_W, IMG_H, CU_MAX_DISP, CU_INVALID_DISP);
-	cu_mean_filter << <grid, block, 0, stream1 >> > (d_filtered_disp, IMG_W, IMG_H, CU_MAX_DISP, CU_MEDIAN_FILTER_W, CU_MEDIAN_FILTER_H);
+	cu_subpixel << <grid, block, 0, stream1 >> > (d_cost, d_disp, d_filtered_disp, IMG_W, IMG_H, MAX_DISP, INVALID_DISP);
+	cu_mean_filter << <grid, block, 0, stream1 >> > (d_filtered_disp, IMG_W, IMG_H, MAX_DISP, CU_MEDIAN_FILTER_W, CU_MEDIAN_FILTER_H);
+	cu_speckle_filter_init << <grid, block, 0, stream2 >> > (d_label, d_area, IMG_W, IMG_H);
+	cudaStreamSynchronize(stream1);
+	cudaStreamSynchronize(stream2);
+
+	cu_speckle_filter_union_find << <grid, block, 0, stream1 >> > (d_filtered_disp, d_label, d_area, IMG_W, IMG_H, CU_SPECKLE_DIS);
+	cu_speckle_filter_sum_up << <grid, block, 0, stream1 >> > (d_label, d_area, IMG_W, IMG_H);
+	cu_speckle_filter_end << <grid, block, 0, stream1 >> > (d_filtered_disp, d_label, d_area, IMG_W, IMG_H, INVALID_DISP, CU_SPECKLE_SIZE);
 
 	cudaDeviceSynchronize();
 	printf("cuda post_filter takes %lf ms\n", get_cur_ms() - be);
 
-	cudaMemcpyAsync(disp, d_filtered_disp, IMG_H * IMG_W * sizeof(float), cudaMemcpyDeviceToHost, stream1);
+	cudaMemcpyAsync(filtered_disp.data, d_filtered_disp, IMG_H * IMG_W * sizeof(float), cudaMemcpyDeviceToHost, stream1);
+	cudaMemcpyAsync(disp.data, d_disp, IMG_H * IMG_W * sizeof(uchar), cudaMemcpyDeviceToHost, stream2);
+}
+
+
+void GPU_SGM::show_disp()
+{
+	// left border invalid
+	for (int i = 0; i < filtered_disp.rows; i++)
+	{
+		float *ptr = filtered_disp.ptr<float>(i);
+		for (int j = 0; j < MAX_DISP; j++)
+		{
+			ptr[j] = INVALID_DISP;
+		}
+	}
+
+	// convert to RGB for better observation
+	colormap();
+
+	Mat debug_view, tmp;
+
+	debug_view = debug_view.zeros(IMG_H * 2, IMG_W, CV_8UC3);
+	tmp = debug_view(Rect(0, 0, IMG_W, IMG_H));
+	cvtColor(img_l, img_l, CV_GRAY2BGR);
+	img_l.copyTo(tmp);
+	tmp = debug_view(Rect(0, IMG_H - 1, IMG_W, IMG_H));
+	colored_disp.copyTo(tmp);
+
+	namedWindow("disp_map", 1);
+	imshow("disp_map", debug_view);
+	//imwrite("example/test.png", debug_view);
+
+	waitKey();
+	destroyWindow("disp_map");
+
+}
+
+
+void  GPU_SGM::colormap()
+{
+	float disp_value = 0;
+	for (int i = 0; i < filtered_disp.rows; i++)
+	{
+		for (int j = 0; j < filtered_disp.cols; j++)
+		{
+			disp_value = filtered_disp.at<float>(i, j);
+			//disp_value = disp.at<uchar>(i, j);
+			if (disp_value > MAX_DISP - 1)
+			{
+				colored_disp.at<Vec3b>(i, j)[0] = 0;
+				colored_disp.at<Vec3b>(i, j)[1] = 0;
+				colored_disp.at<Vec3b>(i, j)[2] = 0;
+			}
+			else
+			{
+				disp_value *= (256 / (MAX_DISP));
+				if (disp_value <= 51)
+				{
+					colored_disp.at<Vec3b>(i, j)[0] = 255;
+					colored_disp.at<Vec3b>(i, j)[1] = disp_value * 5;
+					colored_disp.at<Vec3b>(i, j)[2] = 0;
+				}
+				else if (disp_value <= 102)
+				{
+					disp_value -= 51;
+					colored_disp.at<Vec3b>(i, j)[0] = 255 - disp_value * 5;
+					colored_disp.at<Vec3b>(i, j)[1] = 255;
+					colored_disp.at<Vec3b>(i, j)[2] = 0;
+				}
+				else if (disp_value <= 153)
+				{
+					disp_value -= 102;
+					colored_disp.at<Vec3b>(i, j)[0] = 0;
+					colored_disp.at<Vec3b>(i, j)[1] = 255;
+					colored_disp.at<Vec3b>(i, j)[2] = disp_value * 5;
+				}
+				else if (disp_value <= 204)
+				{
+					disp_value -= 153;
+					colored_disp.at<Vec3b>(i, j)[0] = 0;
+					colored_disp.at<Vec3b>(i, j)[1] = 255 - uchar(128.0*disp_value / 51.0 + 0.5);
+					colored_disp.at<Vec3b>(i, j)[2] = 255;
+				}
+				else
+				{
+					disp_value -= 204;
+					colored_disp.at<Vec3b>(i, j)[0] = 0;
+					colored_disp.at<Vec3b>(i, j)[1] = 127 - uchar(127.0*disp_value / 51.0 + 0.5);
+					colored_disp.at<Vec3b>(i, j)[2] = 255;
+				}
+			}
+		}
+	}
 }

@@ -1,13 +1,13 @@
-#include "../global.h"
+#include "../cpu_inc/global.h"
 
 
-__global__ void cu_Build_cost_table(uchar *d_ll, uchar *d_rr,
+__global__ void cu_build_cost_table(uchar *d_img_l, uchar *d_img_r,
 																   uint64_t *d_cost_table_l,
 																   uint64_t *d_cost_table_r,
 																   int img_w, int img_h,
 																   int win_w, int win_h);
 
-__global__ void cu_Build_dsi_from_table(uint64_t *d_cost_table_l,
+__global__ void cu_build_dsi_from_table(uint64_t *d_cost_table_l,
 																		   uint64_t *d_cost_table_r,
 																		   float *d_cost,
 																		   int img_w, int img_h, int max_disp);

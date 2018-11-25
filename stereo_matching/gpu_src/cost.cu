@@ -1,7 +1,7 @@
 #include "../gpu_inc/cost.cuh"
 
 
-__global__ void cu_Build_cost_table(uchar *d_ll, uchar *d_rr,
+__global__ void cu_build_cost_table(uchar *d_img_l, uchar *d_img_r,
 																   uint64_t *d_cost_table_l, 
 	                                                               uint64_t *d_cost_table_r,
 	                                                               int img_w, int img_h,
@@ -13,8 +13,8 @@ __global__ void cu_Build_cost_table(uchar *d_ll, uchar *d_rr,
 	int row = index / img_w;
 
 	uint64_t value_l = 0, value_r = 0;
-	uchar ctr_pixel_l = d_ll[index];
-	uchar ctr_pixel_r = d_rr[index];
+	uchar ctr_pixel_l = d_img_l[index];
+	uchar ctr_pixel_r = d_img_r[index];
 
 	for (int i = -win_h / 2; i <= win_h / 2; i++)
 	{
@@ -27,8 +27,8 @@ __global__ void cu_Build_cost_table(uchar *d_ll, uchar *d_rr,
 			int x = MAX(col + j, 0);
 			x = MIN(x, img_w - 1);
 			int index_ = y * img_w + x;
-			value_l = (value_l | (d_ll[index_] > ctr_pixel_l)) << 1;
-			value_r = (value_r | (d_rr[index_] > ctr_pixel_r)) << 1;
+			value_l = (value_l | (d_img_l[index_] > ctr_pixel_l)) << 1;
+			value_r = (value_r | (d_img_r[index_] > ctr_pixel_r)) << 1;
 		}
 	}
 	d_cost_table_l[index] = value_l;
@@ -36,7 +36,7 @@ __global__ void cu_Build_cost_table(uchar *d_ll, uchar *d_rr,
 }
 
 
-__global__ void cu_Build_dsi_from_table(uint64_t *d_cost_table_l,
+__global__ void cu_build_dsi_from_table(uint64_t *d_cost_table_l,
 																		   uint64_t *d_cost_table_r,
 																		   float *d_cost,
 																		   int img_w, int img_h, int max_disp)
