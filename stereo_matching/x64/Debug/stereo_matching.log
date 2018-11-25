@@ -1,8 +1,39 @@
-﻿  Compiling CUDA source file gpu_src\SGM.cu...
+﻿  Compiling CUDA source file gpu_inc\SGM.cuh...
+  Compiling CUDA source file gpu_src\SGM.cu...
+  
+  D:\vs_project\stereo_matching\stereo_matching>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin\nvcc.exe" -gencode=arch=compute_30,code=\"sm_30,compute_30\" --use-local-env --cl-version 2015 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\include"     --keep-dir x64\Debug -maxrregcount=1000000  --machine 64 --compile -cudart shared    -use_fast_math  -Xcompiler "/EHsc /W0 /nologo /O2 /FS /Zi  /MTd /GR-" -o x64\Debug\SGM.cuh.obj "D:\vs_project\stereo_matching\stereo_matching\gpu_inc\SGM.cuh" 
   
   D:\vs_project\stereo_matching\stereo_matching>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin\nvcc.exe" -gencode=arch=compute_30,code=\"sm_30,compute_30\" --use-local-env --cl-version 2015 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\include"     --keep-dir x64\Debug -maxrregcount=1000000  --machine 64 --compile -cudart shared    -use_fast_math  -Xcompiler "/EHsc /W0 /nologo /O2 /FS /Zi  /MTd /GR-" -o x64\Debug\SGM.cu.obj "D:\vs_project\stereo_matching\stereo_matching\gpu_src\SGM.cu" 
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(8): warning : variable "IMG_W" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(9): warning : variable "IMG_H" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(12): warning : variable "CU_INVALID_DISP" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(13): warning : variable "CU_WIN_H" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(14): warning : variable "CU_WIN_W" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(15): warning : variable "CU_COST_WIN_H" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(16): warning : variable "CU_COST_WIN_W" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(17): warning : variable "CU_UNIQUE_RATIO" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(18): warning : variable "CU_MEDIAN_FILTER_H" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(19): warning : variable "CU_MEDIAN_FILTER_W" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(20): warning : variable "CU_SPECKLE_SIZE" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(21): warning : variable "CU_SPECKLE_DIS" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(23): warning : variable "CU_USE_8_PATH" was declared but never referenced
+CUDACOMPILE : ptxas warning : Too big maxrregcount value specified 1000000, will be ignored
 D:/vs_project/stereo_matching/stereo_matching/gpu_src/SGM.cu(137): warning : function "speckle_filter" was declared but never referenced
 CUDACOMPILE : ptxas warning : Too big maxrregcount value specified 1000000, will be ignored
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(8): warning : variable "IMG_W" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(9): warning : variable "IMG_H" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(12): warning : variable "CU_INVALID_DISP" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(13): warning : variable "CU_WIN_H" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(14): warning : variable "CU_WIN_W" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(15): warning : variable "CU_COST_WIN_H" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(16): warning : variable "CU_COST_WIN_W" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(17): warning : variable "CU_UNIQUE_RATIO" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(18): warning : variable "CU_MEDIAN_FILTER_H" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(19): warning : variable "CU_MEDIAN_FILTER_W" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(20): warning : variable "CU_SPECKLE_SIZE" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(21): warning : variable "CU_SPECKLE_DIS" was declared but never referenced
+D:/vs_project/stereo_matching/stereo_matching/gpu_inc/SGM.cuh(23): warning : variable "CU_USE_8_PATH" was declared but never referenced
+  SGM.cuh
 D:/vs_project/stereo_matching/stereo_matching/gpu_src/SGM.cu(137): warning : function "speckle_filter" was declared but never referenced
   SGM.cu
 cl : 命令行 warning D9007: “/Gm”需要“/Zi 或 /ZI”；选项被忽略
@@ -15,9 +46,13 @@ Solver.cpp(154): warning C4244: “return”: 从“double”转换到“float�
 Solver.cpp(169): warning C4244: “=”: 从“uint64_t”转换到“double”，可能丢失数据
 Solver.cpp(175): warning C4244: “return”: 从“double”转换到“float”，可能丢失数据
 Solver.cpp(350): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
-Solver.cpp(458): warning C4244: “=”: 从“float”转换到“uchar”，可能丢失数据
-Solver.cpp(464): warning C4244: “=”: 从“float”转换到“uchar”，可能丢失数据
-Solver.cpp(473): warning C4244: “=”: 从“float”转换到“uchar”，可能丢失数据
+Solver.cpp(426): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
+Solver.cpp(532): warning C4244: “=”: 从“float”转换到“uchar”，可能丢失数据
+Solver.cpp(538): warning C4244: “=”: 从“float”转换到“uchar”，可能丢失数据
+Solver.cpp(547): warning C4244: “=”: 从“float”转换到“uchar”，可能丢失数据
+  main.cpp
+d:\vs_project\stereo_matching\stereo_matching\Solver.h(14): warning C4305: “初始化”: 从“double”到“float”截断
+d:\vs_project\stereo_matching\stereo_matching\gpu_inc\SGM.cuh(17): warning C4305: “初始化”: 从“double”到“float”截断
   cost.obj : 找到 MSIL .netmodule 或使用 /GL 编译的模块；正在使用 /LTCG 重新启动链接；将 /LTCG 添加到链接命令行以改进链接器性能
 LINK : warning LNK4075: 忽略“/INCREMENTAL”(由于“/LTCG”规范)
   正在生成代码

@@ -358,6 +358,78 @@ static void speckle_filter(Mat &m, int value, int max_size, int max_dis)
 }
 
 
+static int Find(int i, int *label)
+{
+	while (i != label[i])
+	{
+		i = label[i];
+	}
+	return i;
+}
+
+
+static void Union(int i, int j, int *label)  // join i to j
+{
+	int label_a = Find(i, label);
+	int label_b = Find(j, label);
+	if (label_a != label_b)
+	{
+		label[label_a] = label_b;
+	}
+}
+
+
+static void speckle_filter_new(Mat &m, int value, int max_size, int max_dis)
+{
+	int *label = new int[m.rows * m.cols];
+	int *area = new int[m.rows * m.cols];
+	for (int i = 0; i < m.rows * m.cols; i++)
+	{
+		label[i] = i;
+		area[i] = 0;
+	}
+
+	for (int i = 0; i < m.rows * m.cols; i++)
+	{
+		int row = i / m.cols;
+		int col = i % m.cols;
+		if (row > 0 && fabs(m.at<float>(row, col) - m.at<float>(row - 1, col)) < max_dis)
+		{
+			Union(i - m.cols, i, label);
+		}
+		if (row < m.rows - 1 && fabs(m.at<float>(row, col) - m.at<float>(row + 1, col)) < max_dis)
+		{
+			Union(i + m.cols, i, label);
+		}
+		if (col > 0 && fabs(m.at<float>(row, col) - m.at<float>(row, col - 1)) < max_dis)
+		{
+			Union(i - 1, i, label);
+		}
+		if (col < m.cols - 1 && fabs(m.at<float>(row, col) - m.at<float>(row, col + 1)) < max_dis)
+		{
+			Union(i + 1, i, label);
+		}
+	}
+
+	for (int i = 0; i < m.rows * m.cols; i++)
+	{
+		label[i] = Find(i, label);
+		area[label[i]]++;
+	}
+
+	for (int i = 0; i < m.rows; i++)
+	{
+		for (int j = 0; j < m.cols; j++)
+		{
+			if (area[label[i*m.cols + j]] <= max_size)
+			{
+				m.at<float>(i, j) = value;
+			}
+		}
+	}
+}
+
+
 void Solver::post_filter()
 {
 	double be = get_cur_ms();
@@ -415,8 +487,10 @@ void Solver::post_filter()
 	//	}
 	//}
 
-	// speckle_filter
-	speckle_filter(filtered_disp, INVALID_DISP, SPECKLE_SIZE, SPECKLE_DIS);
+	 //speckle_filter
+	//speckle_filter(filtered_disp, INVALID_DISP, SPECKLE_SIZE, SPECKLE_DIS);
+	speckle_filter_new(filtered_disp, INVALID_DISP, SPECKLE_SIZE, SPECKLE_DIS);
+
 	printf("post process takes %lf ms\n", get_cur_ms() - be);
 
 	/*
