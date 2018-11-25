@@ -176,7 +176,7 @@ void GPU_SGM::process(Mat &img_l, Mat &img_r)
 	be = get_cur_ms();
 
 	cu_subpixel << <grid, block, 0, stream1 >> > (d_cost, d_disp, d_filtered_disp, IMG_W, IMG_H, MAX_DISP, INVALID_DISP);
-	cu_mean_filter << <grid, block, 0, stream1 >> > (d_filtered_disp, IMG_W, IMG_H, MAX_DISP, CU_MEDIAN_FILTER_W, CU_MEDIAN_FILTER_H);
+	cu_median_filter << <grid, block, 0, stream1 >> > (d_filtered_disp, IMG_W, IMG_H, MAX_DISP, CU_MEDIAN_FILTER_W, CU_MEDIAN_FILTER_H);
 	cu_speckle_filter_init << <grid, block, 0, stream2 >> > (d_label, d_area, IMG_W, IMG_H);
 	cudaStreamSynchronize(stream1);
 	cudaStreamSynchronize(stream2);
@@ -189,7 +189,7 @@ void GPU_SGM::process(Mat &img_l, Mat &img_r)
 	printf("cuda post_filter takes %lf ms\n", get_cur_ms() - be);
 
 	cudaMemcpyAsync(filtered_disp.data, d_filtered_disp, IMG_H * IMG_W * sizeof(float), cudaMemcpyDeviceToHost, stream1);
-	cudaMemcpyAsync(disp.data, d_disp, IMG_H * IMG_W * sizeof(uchar), cudaMemcpyDeviceToHost, stream2);
+	//cudaMemcpyAsync(disp.data, d_disp, IMG_H * IMG_W * sizeof(uchar), cudaMemcpyDeviceToHost, stream2);
 }
 
 
@@ -219,7 +219,7 @@ void GPU_SGM::show_disp()
 
 	namedWindow("disp_map", 1);
 	imshow("disp_map", debug_view);
-	//imwrite("example/test.png", debug_view);
+	imwrite("example/test.png", debug_view);
 
 	waitKey();
 	destroyWindow("disp_map");

@@ -15,8 +15,8 @@ int main()
 
 		for (int cnt = 0; cnt < 1; cnt++)
 		{
-			Mat img_l = imread("example/kitti_0_left.png", IMREAD_GRAYSCALE);
-			Mat img_r = imread("example/kitti_0_right.png", IMREAD_GRAYSCALE);
+			Mat img_l = imread("example/kitti_1_left.png", IMREAD_GRAYSCALE);
+			Mat img_r = imread("example/kitti_1_right.png", IMREAD_GRAYSCALE);
 			resize(img_l, img_l, Size(IMG_W, IMG_H));
 			resize(img_r, img_r, Size(IMG_W, IMG_H));
 			printf("waiting ...\n");
@@ -37,8 +37,8 @@ int main()
 
 		for (int cnt = 0; cnt < 1; cnt++)
 		{
-			Mat img_l = imread("example/kitti_0_left.png", IMREAD_GRAYSCALE);
-			Mat img_r = imread("example/kitti_0_right.png", IMREAD_GRAYSCALE);
+			Mat img_l = imread("example/kitti_1_left.png", IMREAD_GRAYSCALE);
+			Mat img_r = imread("example/kitti_1_right.png", IMREAD_GRAYSCALE);
 			resize(img_l, img_l, Size(IMG_W, IMG_H));
 			resize(img_r, img_r, Size(IMG_W, IMG_H));
 			printf("waiting ...\n");
@@ -55,11 +55,11 @@ int main()
 	}
 
 	/*
-	Mat rgb_l = imread("example/left_0.png");
+	Mat rgb_l = imread("example/left_1.png");
 
 	// read calibration
 	std::ifstream in;
-	in.open("example/calib_0.txt");
+	in.open("example/calib_1.txt");
 	if (!in.is_open()){
 		printf("reading calib file failed\n");
 		std::cin.get();
@@ -172,7 +172,7 @@ int main()
 	// write file for meshlab visualization
 	printf("generating data file ...\n");
 	std::ofstream out;
-	out.open("example/pt_0.txt");
+	out.open("example/pt_1.txt");
 	for (int i = 0; i < disp.rows; i++)
 	{
 		for (int j = 0; j < disp.cols; j++)

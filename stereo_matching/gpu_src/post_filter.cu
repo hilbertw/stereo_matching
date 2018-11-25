@@ -32,7 +32,33 @@ __global__ void cu_subpixel(float *d_cost, uchar *d_disp, float *d_filtered_disp
 }
 
 
-__global__ void cu_mean_filter(float *d_filtered_disp, int img_w, int img_h, int max_disp, int win_w, int win_h)
+__device__ void sort_quick(float *x, int left_idx, int right_idx)
+{
+	int i = left_idx, j = right_idx;
+	float pivot = x[(left_idx + right_idx) / 2];
+	while (i <= j)
+	{
+		while (x[i] < pivot)
+			i++;
+		while (x[j] > pivot)
+			j--;
+		if (i <= j) {
+			float temp;
+			temp = x[i];
+			x[i] = x[j];
+			x[j] = temp;
+			i++;
+			j--;
+		}
+	};
+	if (left_idx < j)
+		sort_quick(x, left_idx, j);
+	if (i < right_idx)
+		sort_quick(x, i, right_idx);
+}
+
+
+__global__ void cu_median_filter(float *d_filtered_disp, int img_w, int img_h, int max_disp, int win_w, int win_h)
 {
 	int index = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y + threadIdx.y * blockDim.x + threadIdx.x;
 	if (index > img_w * img_h - 1)  return;
@@ -42,7 +68,7 @@ __global__ void cu_mean_filter(float *d_filtered_disp, int img_w, int img_h, int
 	if (row < win_h / 2 || row > img_h - win_h / 2 - 1 || col < win_w / 2 || col > img_w - win_w / 2)  return;
 	if (d_filtered_disp[index] <= max_disp - 1)  return;
 
-	float sum = 0;
+	float v[25];
 	int valid_cnt = 0;
 	for (int m = row - win_h / 2; m <= row + win_h / 2; m++)
 	{
@@ -51,14 +77,14 @@ __global__ void cu_mean_filter(float *d_filtered_disp, int img_w, int img_h, int
 			int idx = m * img_w + n;
 			if (d_filtered_disp[idx] <= max_disp - 1)
 			{
-				valid_cnt++;
-				sum += d_filtered_disp[idx];
+				v[valid_cnt++] = d_filtered_disp[idx];
 			}
 		}
 	}
 	if (valid_cnt > win_w * win_h / 2)
 	{
-		d_filtered_disp[index] = sum / valid_cnt;
+		sort_quick(v, 0, valid_cnt);
+		d_filtered_disp[index] = v[valid_cnt / 2];
 	}
 }
 

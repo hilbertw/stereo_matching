@@ -1,11 +1,9 @@
 Stereo Matching
 ==================
-This repository is an example for stereo matching I've been learning recently. 
+This repository is an example for stereo matching I've been learning recently. Support both cpu and gpu working.
 
 Pre-requisites
 --------------
-Visual Studio 2015
-
 CUDA
 
 OpenCV
@@ -20,7 +18,5 @@ Result
 -----
 Below shows the disparity and coresponding pointcloud mapping visualized using MeshLab.
 
-Now it costs about 3s per img (about 1280 * 375). Supporting gpu support gradually.
-
-![disparity_0.jpg](https://github.com/hunterlew/stereo_matching/blob/master/stereo_matching/example/disp_rgb_0.png)
+![disparity_0.jpg](https://github.com/hunterlew/stereo_matching/blob/master/stereo_matching/example/disp_0.png)
 ![mapping_0.jpg](https://github.com/hunterlew/stereo_matching/blob/master/stereo_matching/example/mapping_0.png)
