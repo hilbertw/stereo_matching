@@ -150,13 +150,19 @@ void GPU_SGM::process(Mat &img_l, Mat &img_r)
 	cu_dp_L4 << <dp_grid, dp_block, 0, stream4 >> > (d_cost, d_L4, d_min_L4, IMG_W, IMG_H, MAX_DISP, P1, P2);
 	if (CU_USE_8_PATH)
 	{
-		for (int i = 0; i < IMG_H; i++)
-		{
-			cu_dp_L5 << <dp_grid, dp_block, 0, stream5 >> > (d_cost, d_L5, d_min_L5, i, IMG_W, IMG_H, MAX_DISP, P1, P2);
-			cu_dp_L6 << <dp_grid, dp_block, 0, stream6 >> > (d_cost, d_L6, d_min_L6, i, IMG_W, IMG_H, MAX_DISP, P1, P2);
-			cu_dp_L7 << <dp_grid, dp_block, 0, stream7 >> > (d_cost, d_L7, d_min_L7, IMG_H - 1 - i, IMG_W, IMG_H, MAX_DISP, P1, P2);
-			cu_dp_L8 << <dp_grid, dp_block, 0, stream8 >> > (d_cost, d_L8, d_min_L8, IMG_H - 1 - i, IMG_W, IMG_H, MAX_DISP, P1, P2);
-		}
+		//for (int i = 0; i < IMG_H; i++)
+		//{
+		//	cu_dp_L5 << <dp_grid, dp_block, 0, stream5 >> > (d_cost, d_L5, d_min_L5, i, IMG_W, IMG_H, MAX_DISP, P1, P2);
+		//	cu_dp_L6 << <dp_grid, dp_block, 0, stream6 >> > (d_cost, d_L6, d_min_L6, i, IMG_W, IMG_H, MAX_DISP, P1, P2);
+		//	cu_dp_L7 << <dp_grid, dp_block, 0, stream7 >> > (d_cost, d_L7, d_min_L7, IMG_H - 1 - i, IMG_W, IMG_H, MAX_DISP, P1, P2);
+		//	cu_dp_L8 << <dp_grid, dp_block, 0, stream8 >> > (d_cost, d_L8, d_min_L8, IMG_H - 1 - i, IMG_W, IMG_H, MAX_DISP, P1, P2);
+		//}
+
+		// truncated dp almost the same
+		cu_dp_L5_truncated << <dp_grid, dp_block, 0, stream5 >> > (d_cost, d_L5, d_min_L5, IMG_W, IMG_H, MAX_DISP, P1, P2);
+		cu_dp_L6_truncated << <dp_grid, dp_block, 0, stream6 >> > (d_cost, d_L6, d_min_L6, IMG_W, IMG_H, MAX_DISP, P1, P2);
+		cu_dp_L7_truncated << <dp_grid, dp_block, 0, stream7 >> > (d_cost, d_L7, d_min_L7, IMG_W, IMG_H, MAX_DISP, P1, P2);
+		cu_dp_L8_truncated << <dp_grid, dp_block, 0, stream8 >> > (d_cost, d_L8, d_min_L8, IMG_W, IMG_H, MAX_DISP, P1, P2);
 	}
 	cudaDeviceSynchronize();
 	printf("dp takes %lf ms\n", get_cur_ms() - be);

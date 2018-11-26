@@ -22,3 +22,11 @@ __global__ void aggregation(float *d_cost_sum, float *d_L1, float *d_L2, float *
 													int img_w, int img_h, int max_disp);
 
 __global__ void wta(float *d_cost_sum, uchar *disparity, int img_w, int img_h, int max_disp, float ratio, int invalid);
+
+__global__ void cu_dp_L5_truncated(float *d_cost, short *d_dp, float *d_dp_min, int img_w, int img_h, int max_disp, int P1, int P2);
+
+__global__ void cu_dp_L6_truncated(float *d_cost, short *d_dp, float *d_dp_min, int img_w, int img_h, int max_disp, int P1, int P2);
+
+__global__ void cu_dp_L7_truncated(float *d_cost, short *d_dp, float *d_dp_min, int img_w, int img_h, int max_disp, int P1, int P2);
+
+__global__ void cu_dp_L8_truncated(float *d_cost, short *d_dp, float *d_dp_min, int img_w, int img_h, int max_disp, int P1, int P2);

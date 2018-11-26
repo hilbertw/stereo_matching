@@ -301,3 +301,135 @@ __global__ void wta(float *d_cost_sum, uchar *disparity, int img_w, int img_h, i
 		disparity[index] = min_d;
 	}
 }
+
+
+__global__ void cu_dp_L5_truncated(float *d_cost, short *d_dp, float *d_dp_min, int img_w, int img_h, int max_disp, int P1, int P2)
+{
+	int col = blockIdx.x;
+	int disp = threadIdx.x;
+	if (col > img_w - 1)  return;
+
+	int end = MIN(img_w - col - 1, img_h - 1);
+	for (int i = 0; i <= end ; i++)
+	{
+		int j = i + col;  // point to down right
+		d_dp_min[i * img_w + j] = FLT_MAX;
+		__syncthreads();
+
+		int index = i * img_w * max_disp + j * max_disp + disp;
+		if (i == 0)		//init
+		{
+			d_dp[index] = d_cost[index];
+		}
+		else
+		{
+			int index_L5_prev = (i - 1) * img_w * max_disp + (j - 1) * max_disp;
+			uchar d_sub_1 = MAX(disp - 1, 0);
+			uchar d_plus_1 = MIN(disp + 1, max_disp - 1);
+			d_dp[index] = MIN(d_dp[index_L5_prev + disp], d_dp[index_L5_prev + d_sub_1] + P1);
+			d_dp[index] = MIN(d_dp[index], d_dp[index_L5_prev + d_plus_1] + P1);
+			d_dp[index] = MIN(d_dp[index], d_dp_min[(i - 1) * img_w + j - 1] + P2);
+			d_dp[index] += (d_cost[index] - d_dp_min[(i - 1) * img_w + j - 1]);
+		}
+		atomicMin(&d_dp_min[i * img_w + j], d_dp[index]);
+	}
+}
+
+
+__global__ void cu_dp_L6_truncated(float *d_cost, short *d_dp, float *d_dp_min, int img_w, int img_h, int max_disp, int P1, int P2)
+{
+	int col = blockIdx.x;
+	int disp = threadIdx.x;
+	if (col > img_w - 1)  return;
+
+	int end = MIN(col, img_h - 1);
+	for (int i = 0; i <= end; i++)
+	{
+		int j = -i + col;  // point to down left
+		d_dp_min[i * img_w + j] = FLT_MAX;
+		__syncthreads();
+
+		int index = i * img_w * max_disp + j * max_disp + disp;
+		if (i == 0)		//init
+		{
+			d_dp[index] = d_cost[index];
+		}
+		else
+		{
+			int index_L6_prev = (i - 1) * img_w * max_disp + (j +1) * max_disp;
+			uchar d_sub_1 = MAX(disp - 1, 0);
+			uchar d_plus_1 = MIN(disp + 1, max_disp - 1);
+			d_dp[index] = MIN(d_dp[index_L6_prev + disp], d_dp[index_L6_prev + d_sub_1] + P1);
+			d_dp[index] = MIN(d_dp[index], d_dp[index_L6_prev + d_plus_1] + P1);
+			d_dp[index] = MIN(d_dp[index], d_dp_min[(i - 1) * img_w + j + 1] + P2);
+			d_dp[index] += (d_cost[index] - d_dp_min[(i - 1) * img_w + j + 1]);
+		}
+		atomicMin(&d_dp_min[i * img_w + j], d_dp[index]);
+	}
+}
+
+
+__global__ void cu_dp_L7_truncated(float *d_cost, short *d_dp, float *d_dp_min, int img_w, int img_h, int max_disp, int P1, int P2)
+{
+	int col = blockIdx.x;
+	int disp = threadIdx.x;
+	if (col > img_w - 1)  return;
+
+	int end = MAX(img_h - img_w + col + 1, 0);
+	for (int i = img_h-1; i >= end; i--)
+	{
+		int j = img_h - 1 - i + col;  // point to top right
+		d_dp_min[i * img_w + j] = FLT_MAX;
+		__syncthreads();
+
+		int index = i * img_w * max_disp + j * max_disp + disp;
+		if (i == img_h-1)		//init
+		{
+			d_dp[index] = d_cost[index];
+		}
+		else
+		{
+			int index_L7_prev = (i + 1) * img_w * max_disp + (j - 1) * max_disp;
+			uchar d_sub_1 = MAX(disp - 1, 0);
+			uchar d_plus_1 = MIN(disp + 1, max_disp - 1);
+			d_dp[index] = MIN(d_dp[index_L7_prev + disp], d_dp[index_L7_prev + d_sub_1] + P1);
+			d_dp[index] = MIN(d_dp[index], d_dp[index_L7_prev + d_plus_1] + P1);
+			d_dp[index] = MIN(d_dp[index], d_dp_min[(i + 1) * img_w + j - 1] + P2);
+			d_dp[index] += (d_cost[index] - d_dp_min[(i + 1) * img_w + j - 1]);
+		}
+		atomicMin(&d_dp_min[i * img_w + j], d_dp[index]);
+	}
+}
+
+
+__global__ void cu_dp_L8_truncated(float *d_cost, short *d_dp, float *d_dp_min, int img_w, int img_h, int max_disp, int P1, int P2)
+{
+	int col = blockIdx.x;
+	int disp = threadIdx.x;
+	if (col > img_w - 1)  return;
+
+	int end = MAX(img_h - col + 1, 0);
+	for (int i = img_h - 1; i >= end; i--)
+	{
+		int j = -(img_h - 1 - i) + col;  // point to top left
+		d_dp_min[i * img_w + j] = FLT_MAX;
+		__syncthreads();
+
+		int index = i * img_w * max_disp + j * max_disp + disp;
+		if (i == img_h - 1)		//init
+		{
+			d_dp[index] = d_cost[index];
+		}
+		else
+		{
+			int index_L8_prev = (i + 1) * img_w * max_disp + (j + 1) * max_disp;
+			uchar d_sub_1 = MAX(disp - 1, 0);
+			uchar d_plus_1 = MIN(disp + 1, max_disp - 1);
+			d_dp[index] = MIN(d_dp[index_L8_prev + disp], d_dp[index_L8_prev + d_sub_1] + P1);
+			d_dp[index] = MIN(d_dp[index], d_dp[index_L8_prev + d_plus_1] + P1);
+			d_dp[index] = MIN(d_dp[index], d_dp_min[(i + 1) * img_w + j + 1] + P2);
+			d_dp[index] += (d_cost[index] - d_dp_min[(i + 1) * img_w + j + 1]);
+		}
+		atomicMin(&d_dp_min[i * img_w + j], d_dp[index]);
+	}
+}
