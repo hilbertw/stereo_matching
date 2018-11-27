@@ -198,14 +198,14 @@
   <ItemGroup>
     <ClInclude Include="cpu_inc\cost.h" />
     <ClInclude Include="cpu_inc\global.h" />
-    <ClInclude Include="cpu_inc\GM.h" />
+    <ClInclude Include="cpu_inc\BM.h" />
     <ClInclude Include="cpu_inc\SGM.h" />
     <ClInclude Include="cpu_inc\Solver.h" />
     <ClInclude Include="cpu_inc\utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cpu_src\cost.cpp" />
-    <ClCompile Include="cpu_src\GM.cpp" />
+    <ClCompile Include="cpu_src\BM.cpp" />
     <ClCompile Include="cpu_src\SGM.cpp" />
     <ClCompile Include="cpu_src\Solver.cpp" />
     <ClCompile Include="cpu_src\utils.cpp" />

@@ -37,7 +37,7 @@ void Solver::show_disp()
 	{
 		//uchar *ptr = disp.ptr<uchar>(i);
 		float *ptr = filtered_disp.ptr<float>(i);
-		for(int j = 0; j < MAX_DISP; j++)
+		for(int j = 0; j < MAX_DISP / SCALE; j++)
 		{
 			ptr[j] = INVALID_DISP;
 		}
@@ -116,7 +116,7 @@ void Solver::build_dsi_from_table()
 			{
 				int index = i * IMG_W * MAX_DISP + j * MAX_DISP + d;
 				uint64_t ct_l = cost_table_l[i*IMG_W + j];
-				uint64_t ct_r = cost_table_r[i*IMG_W + MAX(j - d, 0)];
+				uint64_t ct_r = cost_table_r[i*IMG_W + MAX(j - d / SCALE, 0)];
 				cost[index] = hamming_cost(ct_l, ct_r);
 			}
 		}

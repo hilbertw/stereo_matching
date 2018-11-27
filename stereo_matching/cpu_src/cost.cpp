@@ -16,7 +16,7 @@ float SAD(Mat &img_l, Mat &img_r, Point l_pt, int disp, int win_h, int win_w, fl
 		{
 			x_l = MAX(l_pt.x + j, 0);
 			x_l = MIN(x_l, img_l.cols - 1);
-			x_r = MAX(x_l - disp, 0);
+			x_r = MAX(x_l - disp / SCALE, 0);
 			if (WEIGHTED_COST)
 			{
 				cost += abs(ptr_l[x_l] - ptr_r[x_r]) * weight[(i + win_h / 2) * win_w + (j + win_w / 2)];
@@ -47,7 +47,7 @@ float SSD(Mat &img_l, Mat &img_r, Point l_pt, int disp, int win_h, int win_w, fl
 		{
 			x_l = MAX(l_pt.x + j, 0);
 			x_l = MIN(x_l, img_l.cols - 1);
-			x_r = MAX(x_l - disp, 0);
+			x_r = MAX(x_l - disp / SCALE, 0);
 			if (WEIGHTED_COST)
 			{
 				cost += (ptr_l[x_l] - ptr_r[x_r]) * (ptr_l[x_l] - ptr_r[x_r]) * weight[(i + win_h / 2) * win_w + (j + win_w / 2)];
@@ -87,7 +87,7 @@ int CT(Mat &img_l, Mat &img_r, Point l_pt, int disp, int win_h, int win_w, float
 				continue;
 			x_l = MAX(l_pt.x + j, 0);
 			x_l = MIN(x_l, img_l.cols - 1);
-			x_r = MAX(x_l - disp, 0);
+			x_r = MAX(x_l - disp / SCALE, 0);
 			ct_l = (ct_l | (ptr_l[x_l] > ctr_pixel_l)) << 1;
 			ct_r = (ct_r | (ptr_r[x_r] > ctr_pixel_r)) << 1;
 		}

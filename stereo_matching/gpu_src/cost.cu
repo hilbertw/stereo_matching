@@ -50,7 +50,7 @@ __global__ void cu_build_dsi_from_table(uint64_t *d_cost_table_l,
 	{
 		int dst_index = row * img_w * max_disp + col * max_disp + i;
 		uint64_t ct_l = d_cost_table_l[row*img_w + col];
-		uint64_t ct_r = d_cost_table_r[row*img_w + MAX(col - i, 0)];
+		uint64_t ct_r = d_cost_table_r[row*img_w + MAX(col - i / SCALE, 0)];
 		d_cost[dst_index] = cu_hamming_cost(ct_l, ct_r);
 	}
 }

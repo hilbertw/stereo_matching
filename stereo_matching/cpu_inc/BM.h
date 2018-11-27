@@ -3,11 +3,11 @@
 #include "Solver.h"
 
 
-class GM : public Solver
+class BM : public Solver
 {
 public:
-	GM();
-	~GM();
+	BM();
+	~BM();
 
 	virtual void process(Mat &img_l, Mat &img_r);
 

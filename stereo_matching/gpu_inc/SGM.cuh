@@ -7,12 +7,12 @@
 
 const int CU_WIN_H = 7;
 const int CU_WIN_W = 9;
-const int CU_COST_WIN_H = 5;
-const int CU_COST_WIN_W = 7;
+const int CU_COST_WIN_H = 5 / SCALE;
+const int CU_COST_WIN_W = 7 / SCALE;
 const float CU_UNIQUE_RATIO = 0.8;
 const int CU_MEDIAN_FILTER_H = 5;
 const int CU_MEDIAN_FILTER_W = 5;
-const int CU_SPECKLE_SIZE = 1000;
+const int CU_SPECKLE_SIZE = 1000 / SCALE / SCALE;
 const int CU_SPECKLE_DIS = 2;
 
 const bool CU_USE_8_PATH = 1;

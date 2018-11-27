@@ -1,11 +1,11 @@
-#include "../cpu_inc/GM.h"
+#include "../cpu_inc/BM.h"
 
 
-GM::GM() : Solver()
+BM::BM() : Solver()
 {}
 
 
-void GM::process(Mat &img_l, Mat &img_r)
+void BM::process(Mat &img_l, Mat &img_r)
 {
 	this->img_l = img_l;
 	this->img_r = img_r;
@@ -70,5 +70,5 @@ void GM::process(Mat &img_l, Mat &img_r)
 }
 
 
-GM::~GM()
+BM::~BM()
 {}

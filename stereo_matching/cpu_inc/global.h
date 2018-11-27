@@ -21,9 +21,9 @@
 
 using namespace cv;
 
-
-const int IMG_W = 1240;
-const int IMG_H = 360;
+const int SCALE = 1;
+const int IMG_W = 1240 / SCALE;
+const int IMG_H = 360 / SCALE;
 const int MAX_DISP = 128;
 const int INVALID_DISP = MAX_DISP + 1;
 

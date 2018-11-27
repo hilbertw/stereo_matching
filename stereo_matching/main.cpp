@@ -1,5 +1,5 @@
 #include "cpu_inc/global.h"
-#include "cpu_inc/GM.h"
+#include "cpu_inc/BM.h"
 #include "cpu_inc/SGM.h"
 #include "cpu_inc/utils.h"
 #include "gpu_inc/SGM.cuh"

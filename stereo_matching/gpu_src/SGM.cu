@@ -158,7 +158,7 @@ void GPU_SGM::process(Mat &img_l, Mat &img_r)
 		//	cu_dp_L8 << <dp_grid, dp_block, 0, stream8 >> > (d_cost, d_L8, d_min_L8, IMG_H - 1 - i, IMG_W, IMG_H, MAX_DISP, P1, P2);
 		//}
 
-		// truncated dp almost the same
+		// use truncated dp to approximate the original method
 		cu_dp_L5_truncated << <dp_grid, dp_block, 0, stream5 >> > (d_cost, d_L5, d_min_L5, IMG_W, IMG_H, MAX_DISP, P1, P2);
 		cu_dp_L6_truncated << <dp_grid, dp_block, 0, stream6 >> > (d_cost, d_L6, d_min_L6, IMG_W, IMG_H, MAX_DISP, P1, P2);
 		cu_dp_L7_truncated << <dp_grid, dp_block, 0, stream7 >> > (d_cost, d_L7, d_min_L7, IMG_W, IMG_H, MAX_DISP, P1, P2);
@@ -205,7 +205,7 @@ void GPU_SGM::show_disp()
 	for (int i = 0; i < filtered_disp.rows; i++)
 	{
 		float *ptr = filtered_disp.ptr<float>(i);
-		for (int j = 0; j < MAX_DISP; j++)
+		for (int j = 0; j < MAX_DISP / 2; j++)
 		{
 			ptr[j] = INVALID_DISP;
 		}
