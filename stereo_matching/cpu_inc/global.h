@@ -23,17 +23,20 @@
 using namespace cv;
 
 const int SCALE = 2;
-//const int IMG_W = 1240 / SCALE;
-//const int IMG_H = 360 / SCALE;
-//const int MAX_DISP = 128;
 
-const int IMG_W = 1280 / SCALE;
-const int IMG_H = 720 / SCALE;
+// kitti config
+const int IMG_W = 1240 / SCALE;
+const int IMG_H = 360 / SCALE;
 const int MAX_DISP = 128;
 
 //// middlebury config
 //const int IMG_W = 450 / SCALE;
 //const int IMG_H = 375 / SCALE;
+//const int MAX_DISP = 64;
+
+//// my personal stereo config
+//const int IMG_W = 1280 / SCALE;
+//const int IMG_H = 720 / SCALE;
 //const int MAX_DISP = 64;
 
 const int INVALID_DISP = MAX_DISP + 1;

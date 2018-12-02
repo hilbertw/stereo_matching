@@ -5,9 +5,15 @@
 #include "gpu_inc/SGM.cuh"
 #include "gpu_inc/cost.cuh"
 
+#define OFFLINE_TEST 1
+#define ONLINE_TEST 0
+
 
 int main()
 {
+	//stereo_record(1, "E:\\stereo_181202\\2\\");
+
+#if OFFLINE_TEST
 	Mat disp;
 	if (!USE_GPU)
 	{
@@ -15,8 +21,13 @@ int main()
 
 		for (int cnt = 0; cnt < 1; cnt++)
 		{
-			Mat img_l = imread("example/left.jpg", IMREAD_GRAYSCALE);
-			Mat img_r = imread("example/right.jpg", IMREAD_GRAYSCALE);
+			Mat img_l = imread("example/kitti_0_left.png", IMREAD_GRAYSCALE);
+			Mat img_r = imread("example/kitti_0_right.png", IMREAD_GRAYSCALE);
+
+			//Mat frame = imread("example/000020.png", IMREAD_GRAYSCALE);
+			//imwrite("example/grey_frame.png", frame);
+			//Mat img_l = frame(Rect(0, 0, frame.cols / 2, frame.rows));
+			//Mat img_r = frame(Rect(frame.cols / 2, 0, frame.cols / 2, frame.rows));
 			resize(img_l, img_l, Size(IMG_W, IMG_H));
 			resize(img_r, img_r, Size(IMG_W, IMG_H));
 			printf("waiting ...\n");
@@ -37,8 +48,13 @@ int main()
 
 		for (int cnt = 0; cnt < 1; cnt++)
 		{
-			Mat img_l = imread("example/left.jpg", IMREAD_GRAYSCALE);
-			Mat img_r = imread("example/right.jpg", IMREAD_GRAYSCALE);
+			Mat img_l = imread("example/kitti_0_left.png", IMREAD_GRAYSCALE);
+			Mat img_r = imread("example/kitti_0_right.png", IMREAD_GRAYSCALE);
+
+			//Mat frame = imread("example/000020.png", IMREAD_GRAYSCALE);
+			//imwrite("example/grey_frame.png", frame);
+			//Mat img_l = frame(Rect(0, 0, frame.cols / 2, frame.rows));
+			//Mat img_r = frame(Rect(frame.cols / 2, 0, frame.cols / 2, frame.rows));
 			resize(img_l, img_l, Size(IMG_W, IMG_H));
 			resize(img_r, img_r, Size(IMG_W, IMG_H));
 			printf("waiting ...\n");
@@ -74,6 +90,7 @@ int main()
 		disp = g_sv->get_disp();
 		delete g_sv;
 	}
+#endif
 
 	/*
 	Mat rgb_l = imread("example/left_1.png");
@@ -273,10 +290,10 @@ int main()
 	}
 	*/
 
-/*
+#if ONLINE_TEST
 	Mat disp;
 	Mat frame;
-	VideoCapture cap(1);
+	VideoCapture cap(0);
 	if (!cap.isOpened())
 	{
 		std::cout << "reading camera error" << std::endl;
@@ -287,20 +304,21 @@ int main()
 	cap.set(CV_CAP_PROP_FRAME_HEIGHT, IMG_H);
 
 	printf("initialing camera ...\n");
-	Sleep(1000);
+	Sleep(5000);
 	printf("finished\n");
 
 	if (!USE_GPU)
 	{
 		Solver *sv = new SGM();
 
-		while (1)
+		while (cap.isOpened())
 		{
 			cap >> frame;
 			cvtColor(frame, frame, CV_BGR2GRAY);
-			Mat img_l = frame(Rect(0, 0, IMG_W, IMG_H));
-			Mat img_r = frame(Rect(IMG_W, 0, IMG_W, IMG_H));
-
+			Mat img_l = frame(Rect(0, 0, frame.cols / 2, frame.rows));
+			Mat img_r = frame(Rect(frame.cols / 2, 0, frame.cols / 2, frame.rows));
+			resize(img_l, img_l, Size(IMG_W, IMG_H));
+			resize(img_r, img_r, Size(IMG_W, IMG_H));
 			printf("waiting ...\n");
 
 			double be = get_cur_ms();
@@ -317,39 +335,14 @@ int main()
 	{
 		GPU_SGM *g_sv = new GPU_SGM();
 
-		while (1)
+		while (cap.isOpened())
 		{
 			cap >> frame;
 			cvtColor(frame, frame, CV_BGR2GRAY);
-			Mat img_l = frame(Rect(0, 0, IMG_W, IMG_H));
-			Mat img_r = frame(Rect(IMG_W, 0, IMG_W, IMG_H));
-
+			Mat img_l = frame(Rect(0, 0, frame.cols / 2, frame.rows));
+			Mat img_r = frame(Rect(frame.cols / 2, 0, frame.cols / 2, frame.rows));
 			resize(img_l, img_l, Size(IMG_W, IMG_H));
 			resize(img_r, img_r, Size(IMG_W, IMG_H));
-
-			//cv::StereoSGBM sgbm;
-			//sgbm.preFilterCap = 0;
-			//int SADWindowSize = 11;
-			//int cn = 1;
-			//sgbm.SADWindowSize = SADWindowSize > 0 ? SADWindowSize : 3;
-			//sgbm.P1 = 4 * cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
-			//sgbm.P2 = 32 * cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
-			//sgbm.minDisparity = 0;
-			//sgbm.numberOfDisparities = 128;
-			//sgbm.uniquenessRatio = 15;
-			//sgbm.speckleWindowSize = 250;
-			//sgbm.speckleRange = 2;
-			//sgbm.disp12MaxDiff = 0;
-
-			//Mat disp, disp8;
-			//sgbm(img_l, img_r, disp);
-			//disp.convertTo(disp8, CV_8U, 255 / (128 *16.));
-			//namedWindow("disparity" , 1);
-			//imshow("disparity" , disp8);
-			//waitKey(1);
-
-			imwrite("example/left.jpg", img_l);
-			imwrite("example/right.jpg", img_r);
 			printf("waiting ...\n");
 
 			double be = get_cur_ms();
@@ -362,7 +355,7 @@ int main()
 		disp = g_sv->get_disp();
 		delete g_sv;
 	}
-	*/
+#endif
 	
 	std::cin.get();
 	return 0;
