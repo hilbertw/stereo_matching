@@ -7,13 +7,13 @@
 
 const int WIN_H = 7;
 const int WIN_W = 9;
-const int COST_WIN_H = 5 / SCALE;
-const int COST_WIN_W = 7 / SCALE;
-const float UNIQUE_RATIO = 0.8;
+const int COST_WIN_H = 3 / SCALE;
+const int COST_WIN_W = 5 / SCALE;
+const float UNIQUE_RATIO = 0.7;
 const bool WEIGHTED_COST = 0;
 const int MEDIAN_FILTER_H = 5;
 const int MEDIAN_FILTER_W = 5;
-const int SPECKLE_SIZE = 1000 / SCALE / SCALE;
+const int SPECKLE_SIZE = 1000 / SCALE;
 const int SPECKLE_DIS = 2;
 
 
@@ -48,5 +48,6 @@ protected:
 	uint64_t *cost_table_l, *cost_table_r;
 	float *cost;
 	float *weight;
+	int disp_cnt;
 };
 

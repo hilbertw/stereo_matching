@@ -15,8 +15,8 @@ int main()
 
 		for (int cnt = 0; cnt < 1; cnt++)
 		{
-			Mat img_l = imread("example/kitti_1_left.png", IMREAD_GRAYSCALE);
-			Mat img_r = imread("example/kitti_1_right.png", IMREAD_GRAYSCALE);
+			Mat img_l = imread("example/left.jpg", IMREAD_GRAYSCALE);
+			Mat img_r = imread("example/right.jpg", IMREAD_GRAYSCALE);
 			resize(img_l, img_l, Size(IMG_W, IMG_H));
 			resize(img_r, img_r, Size(IMG_W, IMG_H));
 			printf("waiting ...\n");
@@ -37,11 +37,32 @@ int main()
 
 		for (int cnt = 0; cnt < 1; cnt++)
 		{
-			Mat img_l = imread("example/kitti_1_left.png", IMREAD_GRAYSCALE);
-			Mat img_r = imread("example/kitti_1_right.png", IMREAD_GRAYSCALE);
+			Mat img_l = imread("example/left.jpg", IMREAD_GRAYSCALE);
+			Mat img_r = imread("example/right.jpg", IMREAD_GRAYSCALE);
 			resize(img_l, img_l, Size(IMG_W, IMG_H));
 			resize(img_r, img_r, Size(IMG_W, IMG_H));
 			printf("waiting ...\n");
+
+			//cv::StereoSGBM sgbm;
+			//sgbm.preFilterCap = 0;
+			//int SADWindowSize = 11;
+			//int cn = 1;
+			//sgbm.SADWindowSize = SADWindowSize > 0 ? SADWindowSize : 3;
+			//sgbm.P1 = 4 * cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
+			//sgbm.P2 = 32 * cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
+			//sgbm.minDisparity = 0;
+			//sgbm.numberOfDisparities = 128;
+			//sgbm.uniquenessRatio = 30;
+			//sgbm.speckleWindowSize = 250;
+			//sgbm.speckleRange = 2;
+			//sgbm.disp12MaxDiff = 0;
+
+			//Mat disp, disp8;
+			//sgbm(img_l, img_r, disp);
+			//disp.convertTo(disp8, CV_8U, 255 / (128 *16.));
+			//namedWindow("disparity" , 1);
+			//imshow("disparity" , disp8);
+			//waitKey();
 
 			double be = get_cur_ms();
 			g_sv->process(img_l, img_r);
@@ -195,7 +216,154 @@ int main()
 		}
 	}
 	*/
+
+	/*
+	Mat disp;
+	if (!USE_GPU)
+	{
+		Solver *sv = new SGM();
+
+		for (int cnt = 0; cnt < 194; cnt++)
+		{
+			string img_l_folder = "D:\\data_stereo_flow\\testing\\image_0\\";
+			string img_r_folder = "D:\\data_stereo_flow\\testing\\image_1\\";
+			Mat img_l = imread(img_l_folder + num2str(cnt) + "_10.png", IMREAD_GRAYSCALE);
+			Mat img_r = imread(img_r_folder + num2str(cnt) + "_10.png", IMREAD_GRAYSCALE);
+			std::cout << img_l_folder + num2str(cnt) + "_10.png" << std::endl;
+
+			resize(img_l, img_l, Size(IMG_W, IMG_H));
+			resize(img_r, img_r, Size(IMG_W, IMG_H));
+			printf("waiting ...\n");
+
+			double be = get_cur_ms();
+			sv->process(img_l, img_r);
+			double en = get_cur_ms();
+			printf("done ...\n");
+			printf("time cost: %lf ms\n\n", en - be);
+			sv->show_disp();
+		}
+		disp = sv->get_disp();
+		delete sv;
+	}
+	else
+	{
+		GPU_SGM *g_sv = new GPU_SGM();
+
+		for (int cnt = 0; cnt < 194; cnt++)
+		{
+			string img_l_folder = "D:\\data_stereo_flow\\testing\\image_0\\";
+			string img_r_folder = "D:\\data_stereo_flow\\testing\\image_1\\";
+			Mat img_l = imread(img_l_folder + num2str(cnt) + "_10.png", IMREAD_GRAYSCALE);
+			Mat img_r = imread(img_r_folder + num2str(cnt) + "_10.png", IMREAD_GRAYSCALE);
+			std::cout << img_l_folder + num2str(cnt) + "_10.png" << std::endl;
+
+			resize(img_l, img_l, Size(IMG_W, IMG_H));
+			resize(img_r, img_r, Size(IMG_W, IMG_H));
+			printf("waiting ...\n");
+
+			double be = get_cur_ms();
+			g_sv->process(img_l, img_r);
+			double en = get_cur_ms();
+			printf("done ...\n");
+			printf("time cost: %lf ms\n\n", en - be);
+			g_sv->show_disp();
+		}
+		disp = g_sv->get_disp();
+		delete g_sv;
+	}
+	*/
+
+/*
+	Mat disp;
+	Mat frame;
+	VideoCapture cap(1);
+	if (!cap.isOpened())
+	{
+		std::cout << "reading camera error" << std::endl;
+		std::cin.get();
+		return -1;
+	}
+	cap.set(CV_CAP_PROP_FRAME_WIDTH, IMG_W*2);
+	cap.set(CV_CAP_PROP_FRAME_HEIGHT, IMG_H);
+
+	printf("initialing camera ...\n");
+	Sleep(1000);
+	printf("finished\n");
+
+	if (!USE_GPU)
+	{
+		Solver *sv = new SGM();
+
+		while (1)
+		{
+			cap >> frame;
+			cvtColor(frame, frame, CV_BGR2GRAY);
+			Mat img_l = frame(Rect(0, 0, IMG_W, IMG_H));
+			Mat img_r = frame(Rect(IMG_W, 0, IMG_W, IMG_H));
+
+			printf("waiting ...\n");
+
+			double be = get_cur_ms();
+			sv->process(img_l, img_r);
+			double en = get_cur_ms();
+			printf("done ...\n");
+			printf("time cost: %lf ms\n\n", en - be);
+			sv->show_disp();
+		}
+		disp = sv->get_disp();
+		delete sv;
+	}
+	else
+	{
+		GPU_SGM *g_sv = new GPU_SGM();
+
+		while (1)
+		{
+			cap >> frame;
+			cvtColor(frame, frame, CV_BGR2GRAY);
+			Mat img_l = frame(Rect(0, 0, IMG_W, IMG_H));
+			Mat img_r = frame(Rect(IMG_W, 0, IMG_W, IMG_H));
+
+			resize(img_l, img_l, Size(IMG_W, IMG_H));
+			resize(img_r, img_r, Size(IMG_W, IMG_H));
+
+			//cv::StereoSGBM sgbm;
+			//sgbm.preFilterCap = 0;
+			//int SADWindowSize = 11;
+			//int cn = 1;
+			//sgbm.SADWindowSize = SADWindowSize > 0 ? SADWindowSize : 3;
+			//sgbm.P1 = 4 * cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
+			//sgbm.P2 = 32 * cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
+			//sgbm.minDisparity = 0;
+			//sgbm.numberOfDisparities = 128;
+			//sgbm.uniquenessRatio = 15;
+			//sgbm.speckleWindowSize = 250;
+			//sgbm.speckleRange = 2;
+			//sgbm.disp12MaxDiff = 0;
+
+			//Mat disp, disp8;
+			//sgbm(img_l, img_r, disp);
+			//disp.convertTo(disp8, CV_8U, 255 / (128 *16.));
+			//namedWindow("disparity" , 1);
+			//imshow("disparity" , disp8);
+			//waitKey(1);
+
+			imwrite("example/left.jpg", img_l);
+			imwrite("example/right.jpg", img_r);
+			printf("waiting ...\n");
+
+			double be = get_cur_ms();
+			g_sv->process(img_l, img_r);
+			double en = get_cur_ms();
+			printf("done ...\n");
+			printf("time cost: %lf ms\n\n", en - be);
+			g_sv->show_disp();
+		}
+		disp = g_sv->get_disp();
+		delete g_sv;
+	}
+	*/
 	
-	//std::cin.get();
+	std::cin.get();
 	return 0;
 }

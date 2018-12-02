@@ -27,6 +27,7 @@ Solver::Solver()
 		}
 	}
 	//std::cin.get();
+	disp_cnt = 0;
 }
 
 
@@ -57,10 +58,10 @@ void Solver::show_disp()
 
 	namedWindow("disp_map", 1);
 	imshow("disp_map", debug_view);
-	//imwrite("example/test.png", debug_view);
+	imwrite("D:\\output\\" + num2str(disp_cnt++) + "_disp.png", debug_view);
 
-	waitKey();
-	destroyWindow("disp_map");
+	waitKey(5);
+	//destroyWindow("disp_map");
 }
 
 

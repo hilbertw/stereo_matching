@@ -49,6 +49,8 @@ GPU_SGM::GPU_SGM()
 	disp.create(IMG_H, IMG_W, CV_8UC1);
 	filtered_disp.create(IMG_H, IMG_W, CV_32FC1);
 	colored_disp.create(IMG_H, IMG_W, CV_8UC3);
+
+	disp_cnt = 0;
 }
 
 
@@ -205,7 +207,7 @@ void GPU_SGM::show_disp()
 	for (int i = 0; i < filtered_disp.rows; i++)
 	{
 		float *ptr = filtered_disp.ptr<float>(i);
-		for (int j = 0; j < MAX_DISP / 2; j++)
+		for (int j = 0; j < MAX_DISP / SCALE; j++)
 		{
 			ptr[j] = INVALID_DISP;
 		}
@@ -225,10 +227,10 @@ void GPU_SGM::show_disp()
 
 	namedWindow("disp_map", 1);
 	imshow("disp_map", debug_view);
-	imwrite("example/test.png", debug_view);
+	imwrite("D:\\output\\" + num2str(disp_cnt++) + "_disp.png", debug_view);
 
-	waitKey();
-	destroyWindow("disp_map");
+	waitKey(5);
+	//destroyWindow("disp_map");
 
 }
 

@@ -77,6 +77,7 @@ __global__ void cu_cost_horizontal_filter(float *d_cost, int img_w, int img_h, i
 	if (index > img_h * max_disp - 1)  return;
 	int row = index % img_h;
 	int disp = index / img_h;
+	if (row < img_h / 2)  return;
 
 	float sum = 0;
 	int dst_index = row * img_w * max_disp + disp;
@@ -108,7 +109,7 @@ __global__ void cu_cost_vertical_filter(float *d_cost, int img_w, int img_h, int
 	int disp = index / img_w;
 
 	float sum = 0;
-	int dst_index = col * max_disp + disp;
+	int dst_index = img_h / 2 * img_w * max_disp + col * max_disp + disp;
 	// initialize
 	for (int k = 0; k < win_size; k++)
 	{
@@ -116,7 +117,7 @@ __global__ void cu_cost_vertical_filter(float *d_cost, int img_w, int img_h, int
 		dst_index += img_w * max_disp;
 	}
 	// box filter
-	for (int i = win_size / 2; i < img_h - win_size / 2; i++)
+	for (int i = win_size / 2 + img_h / 2; i < img_h - win_size / 2; i++)
 	{
 		d_cost[i * img_w * max_disp + col * max_disp + disp] = sum / win_size;
 		if (i < img_h - win_size / 2 - 1)
