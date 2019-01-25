@@ -227,15 +227,15 @@ void GPU_SGM::show_disp()
 
 	namedWindow("disp_map", 1);
 	imshow("disp_map", debug_view);
-	imwrite("D:\\output\\" + num2str(disp_cnt++) + "_disp.png", debug_view);
+    imwrite(num2str(disp_cnt++) + "_disp.png", debug_view);
 
-	waitKey(5);
+    waitKey(-1);
 	//destroyWindow("disp_map");
 
 }
 
 
-void  GPU_SGM::colormap()
+void GPU_SGM::colormap()
 {
 	float disp_value = 0;
 	for (int i = 0; i < filtered_disp.rows; i++)

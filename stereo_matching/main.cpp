@@ -17,7 +17,7 @@ int main()
 	Mat disp;
 	if (!USE_GPU)
 	{
-		Solver *sv = new SGM();
+        std::tr1::shared_ptr<SGM> sv(new SGM);
 
 		for (int cnt = 0; cnt < 1; cnt++)
 		{
@@ -28,8 +28,15 @@ int main()
 			//imwrite("example/grey_frame.png", frame);
 			//Mat img_l = frame(Rect(0, 0, frame.cols / 2, frame.rows));
 			//Mat img_r = frame(Rect(frame.cols / 2, 0, frame.cols / 2, frame.rows));
-			resize(img_l, img_l, Size(IMG_W, IMG_H));
-			resize(img_r, img_r, Size(IMG_W, IMG_H));
+
+            printf("left size: %d, %d\n", img_l.rows, img_l.cols);
+            printf("right size: %d, %d\n", img_r.rows, img_r.cols);
+
+            resize(img_l, img_l, Size(IMG_W, IMG_H));
+            resize(img_r, img_r, Size(IMG_W, IMG_H));
+            printf("resized left size: %d, %d\n", img_l.rows, img_l.cols);
+            printf("resized right size: %d, %d\n", img_r.rows, img_r.cols);
+
 			printf("waiting ...\n");
 
 			double be = get_cur_ms();
@@ -40,11 +47,10 @@ int main()
 			sv->show_disp();
 		}
 		disp = sv->get_disp();
-		delete sv;
 	}
 	else
 	{
-		GPU_SGM *g_sv = new GPU_SGM();
+        std::tr1::shared_ptr<GPU_SGM> g_sv(new GPU_SGM);
 
 		for (int cnt = 0; cnt < 1; cnt++)
 		{
@@ -55,8 +61,15 @@ int main()
 			//imwrite("example/grey_frame.png", frame);
 			//Mat img_l = frame(Rect(0, 0, frame.cols / 2, frame.rows));
 			//Mat img_r = frame(Rect(frame.cols / 2, 0, frame.cols / 2, frame.rows));
+
+            printf("left size: %d, %d\n", img_l.rows, img_l.cols);
+            printf("right size: %d, %d\n", img_r.rows, img_r.cols);
+
 			resize(img_l, img_l, Size(IMG_W, IMG_H));
 			resize(img_r, img_r, Size(IMG_W, IMG_H));
+            printf("resized left size: %d, %d\n", img_l.rows, img_l.cols);
+            printf("resized right size: %d, %d\n", img_r.rows, img_r.cols);
+
 			printf("waiting ...\n");
 
 			//cv::StereoSGBM sgbm;
@@ -88,7 +101,6 @@ int main()
 			g_sv->show_disp();
 		}
 		disp = g_sv->get_disp();
-		delete g_sv;
 	}
 #endif
 
@@ -103,7 +115,7 @@ int main()
 		std::cin.get();
 		return 0;
 	}
-	string str, str_tmp;
+    std::string str, str_tmp;
 	std::stringstream ss;
 	//while (std::getline(in, str)){
 	//	std::cout << str << std::endl;
@@ -220,7 +232,7 @@ int main()
 				if (Yc[i*disp.cols + j] < ground_estimate)
 				{
 					std::stringstream ss;
-					string str;
+                    std::string str;
 					int R_value = rgb_l.at<Vec3b>(i, j)[2];
 					int G_value = rgb_l.at<Vec3b>(i, j)[1];
 					int B_value = rgb_l.at<Vec3b>(i, j)[0];
@@ -242,8 +254,8 @@ int main()
 
 		for (int cnt = 0; cnt < 194; cnt++)
 		{
-			string img_l_folder = "D:\\data_stereo_flow\\testing\\image_0\\";
-			string img_r_folder = "D:\\data_stereo_flow\\testing\\image_1\\";
+            std::string img_l_folder = "D:\\data_stereo_flow\\testing\\image_0\\";
+            std::string img_r_folder = "D:\\data_stereo_flow\\testing\\image_1\\";
 			Mat img_l = imread(img_l_folder + num2str(cnt) + "_10.png", IMREAD_GRAYSCALE);
 			Mat img_r = imread(img_r_folder + num2str(cnt) + "_10.png", IMREAD_GRAYSCALE);
 			std::cout << img_l_folder + num2str(cnt) + "_10.png" << std::endl;
@@ -268,8 +280,8 @@ int main()
 
 		for (int cnt = 0; cnt < 194; cnt++)
 		{
-			string img_l_folder = "D:\\data_stereo_flow\\testing\\image_0\\";
-			string img_r_folder = "D:\\data_stereo_flow\\testing\\image_1\\";
+            std::string img_l_folder = "D:\\data_stereo_flow\\testing\\image_0\\";
+            std::string img_r_folder = "D:\\data_stereo_flow\\testing\\image_1\\";
 			Mat img_l = imread(img_l_folder + num2str(cnt) + "_10.png", IMREAD_GRAYSCALE);
 			Mat img_r = imread(img_r_folder + num2str(cnt) + "_10.png", IMREAD_GRAYSCALE);
 			std::cout << img_l_folder + num2str(cnt) + "_10.png" << std::endl;

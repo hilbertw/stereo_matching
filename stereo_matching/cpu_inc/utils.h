@@ -5,6 +5,6 @@
 
 double get_cur_ms();
 
-string num2str(int i);
+std::string num2str(int i);
 
-void stereo_record(int camid, string address);
+void stereo_record(int camid, std::string address);

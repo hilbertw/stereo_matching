@@ -6,14 +6,14 @@ double get_cur_ms()
 	return getTickCount() * 1000.f / getTickFrequency();
 }
 
-string num2str(int i)
+std::string num2str(int i)
 {
 	char ss[50];
 	sprintf(ss, "%06d", i);
 	return ss;
 }
 
-void stereo_record(int camid, string address)
+void stereo_record(int camid, std::string address)
 {
 	int cnt = 0;
 	Mat frame;
@@ -28,7 +28,7 @@ void stereo_record(int camid, string address)
 	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
 
 	printf("initialing camera ...\n");
-	Sleep(5000);
+    sleep(5);  // wait 5 secs
 	printf("finished\n");
 	namedWindow("video");
 
@@ -36,7 +36,7 @@ void stereo_record(int camid, string address)
 	{
 		cap >> frame;
 		if (frame.empty())  break;
-		string img_name = address + num2str(cnt++) + ".png";
+        std::string img_name = address + num2str(cnt++) + ".png";
 		imshow("video", frame);
 		imwrite(img_name, frame);
 		if (waitKey(10) == 13)
@@ -45,6 +45,6 @@ void stereo_record(int camid, string address)
 			destroyAllWindows();
 			break;
 		}
-		Sleep(200);
+        sleep(1);
 	}
 }

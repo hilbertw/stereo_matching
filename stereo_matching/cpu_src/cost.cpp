@@ -1,4 +1,4 @@
-#include "../cpu_inc/Cost.h"
+#include "../cpu_inc/cost.h"
 
 
 float SAD(Mat &img_l, Mat &img_r, Point l_pt, int disp, int win_h, int win_w, float* weight)

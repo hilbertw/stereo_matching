@@ -5,12 +5,13 @@
 #include <sstream>
 #include <stdint.h>
 #include <omp.h>
-#include <windows.h>
+#include <unistd.h>
+#include <tr1/memory>
 
-#include <core/core.hpp>
-#include <highgui/highgui.hpp>
-#include <imgproc/imgproc.hpp>
-#include <calib3d/calib3d.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
 
 #include <cuda_runtime.h>
 #define checkCudaErrors( a ) do { \
