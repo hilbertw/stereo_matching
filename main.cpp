@@ -6,11 +6,14 @@
 #include "gpu_inc/cost.cuh"
 
 #define OFFLINE_TEST 1
-#define ONLINE_TEST 0
 
+std::string example_addr = "/home/hunterlew/catkin_ws/src/stereo_matching/";
 
-int main()
+int main(int argc, char **argv)
 {
+	ros::init(argc, argv, "stereo_node");
+	ros::NodeHandle nh("~");
+
 	//stereo_record(1, "E:\\stereo_181202\\2\\");
 
 #if OFFLINE_TEST
@@ -21,13 +24,8 @@ int main()
 
 		for (int cnt = 0; cnt < 1; cnt++)
 		{
-			Mat img_l = imread("example/kitti_0_left.png", IMREAD_GRAYSCALE);
-			Mat img_r = imread("example/kitti_0_right.png", IMREAD_GRAYSCALE);
-
-			//Mat frame = imread("example/000020.png", IMREAD_GRAYSCALE);
-			//imwrite("example/grey_frame.png", frame);
-			//Mat img_l = frame(Rect(0, 0, frame.cols / 2, frame.rows));
-			//Mat img_r = frame(Rect(frame.cols / 2, 0, frame.cols / 2, frame.rows));
+			Mat img_l = imread(example_addr+"example/kitti_0_left.png", IMREAD_GRAYSCALE);
+			Mat img_r = imread(example_addr+"example/kitti_0_right.png", IMREAD_GRAYSCALE);
 
             printf("left size: %d, %d\n", img_l.rows, img_l.cols);
             printf("right size: %d, %d\n", img_r.rows, img_r.cols);
@@ -54,13 +52,8 @@ int main()
 
 		for (int cnt = 0; cnt < 1; cnt++)
 		{
-			Mat img_l = imread("example/kitti_0_left.png", IMREAD_GRAYSCALE);
-			Mat img_r = imread("example/kitti_0_right.png", IMREAD_GRAYSCALE);
-
-			//Mat frame = imread("example/000020.png", IMREAD_GRAYSCALE);
-			//imwrite("example/grey_frame.png", frame);
-			//Mat img_l = frame(Rect(0, 0, frame.cols / 2, frame.rows));
-			//Mat img_r = frame(Rect(frame.cols / 2, 0, frame.cols / 2, frame.rows));
+			Mat img_l = imread(example_addr+"example/kitti_0_left.png", IMREAD_GRAYSCALE);
+			Mat img_r = imread(example_addr+"example/kitti_0_right.png", IMREAD_GRAYSCALE);
 
             printf("left size: %d, %d\n", img_l.rows, img_l.cols);
             printf("right size: %d, %d\n", img_r.rows, img_r.cols);
@@ -102,7 +95,6 @@ int main()
 		}
 		disp = g_sv->get_disp();
 	}
-#endif
 
 	/*
 	Mat rgb_l = imread("example/left_1.png");
@@ -302,7 +294,7 @@ int main()
 	}
 	*/
 
-#if ONLINE_TEST
+#else
 	Mat disp;
 	Mat frame;
 	VideoCapture cap(0);
@@ -369,6 +361,6 @@ int main()
 	}
 #endif
 	
-	std::cin.get();
+	ros::spin();
 	return 0;
 }

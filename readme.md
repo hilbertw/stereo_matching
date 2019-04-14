@@ -4,11 +4,11 @@ This repository is an example for stereo matching I've been learning recently. S
 
 Pre-requisites
 --------------
+ROS
+
 CUDA
 
 OpenCV
-
-MeshLab
 
 Datasets
 --------
