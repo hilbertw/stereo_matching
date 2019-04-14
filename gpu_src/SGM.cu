@@ -229,7 +229,7 @@ void GPU_SGM::show_disp()
 	imshow("disp_map", debug_view);
     imwrite(num2str(disp_cnt++) + "_disp.png", debug_view);
 
-    waitKey(-1);
+    // waitKey(-1);
 	//destroyWindow("disp_map");
 
 }

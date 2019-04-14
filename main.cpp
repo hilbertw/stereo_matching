@@ -99,6 +99,8 @@ int main(int argc, char **argv)
 
 	Mat rgb_l = imread(example_addr+"example/left_0.png");
 	resize(rgb_l, rgb_l, Size(IMG_W, IMG_H));
+	cv::Mat grey_l;
+	cv::cvtColor(rgb_l, grey_l, CV_BGR2GRAY);
 
 	// read calibration
 	std::ifstream in;
@@ -154,6 +156,9 @@ int main(int argc, char **argv)
 	double min_Y = DBL_MAX, max_Y = -DBL_MAX;
 	double min_Z = DBL_MAX, max_Z = -DBL_MAX;
 
+	std::vector<cv::Point3d> stereo_pts;
+	std::vector<uchar> stereo_pixel;
+
 	for (int i = 0; i < disp.rows; i++)
 	{
 		float *ptr = disp.ptr<float>(i);
@@ -175,6 +180,9 @@ int main(int argc, char **argv)
 				if (Yc[i*disp.cols + j] < min_Y)  min_Y = Yc[i*disp.cols + j];
 				if (Zc[i*disp.cols + j] > max_Z)  max_Z = Zc[i*disp.cols + j];
 				if (Zc[i*disp.cols + j] < min_Z)  min_Z = Zc[i*disp.cols + j];
+
+				stereo_pts.push_back({Xc[i*disp.cols + j], Yc[i*disp.cols + j], Zc[i*disp.cols + j]});
+				stereo_pixel.push_back(grey_l.at<uchar>(i,j));
 			}
 		}
 	}
@@ -182,6 +190,34 @@ int main(int argc, char **argv)
 	printf("minx: %lf, maxx:%lf\n", min_X, max_X);
 	printf("miny: %lf, maxy:%lf\n", min_Y, max_Y);  //  indicates the camera height from ground
 	printf("minz: %lf, maxz:%lf\n", min_Z, max_Z);
+
+	// visualize in rviz
+	float max_range = 100;
+	ros::Publisher pd_pub = nh.advertise<sensor_msgs::PointCloud> ("stereo_pointcloud_cam0", 1);
+
+	// if "no tf data" in rviz, run "rosrun tf static_transform_publisher 0 0 0 0 0 0 1 map my_frame 10"
+    while(1)
+	{
+		sensor_msgs::PointCloud pd;
+		pd.header.stamp = ros::Time::now();
+		pd.header.frame_id = "my_frame";
+		pd.points.resize(stereo_pts.size());
+
+		pd.channels.resize(1);
+		pd.channels[0].name = "grey";
+		pd.channels[0].values.resize(stereo_pts.size());
+
+		for (int i = 0; i < stereo_pts.size(); ++i)
+		{
+			pd.points[i].x = stereo_pts[i].x;
+			pd.points[i].y = stereo_pts[i].y;
+			pd.points[i].z = stereo_pts[i].z;
+			if (stereo_pts[i].z > max_range)  continue;
+			pd.channels[0].values[i] = stereo_pixel[i];
+		}
+		pd_pub.publish(pd);
+		usleep(500000);  // 500ms
+	}
 
 /*
 	// write file for meshlab visualization
@@ -277,7 +313,7 @@ int main(int argc, char **argv)
 	}
 #endif
 	
-	// ros::spin();
+	ros::spin();
 	cv::destroyAllWindows();
 	return 0;
 }
