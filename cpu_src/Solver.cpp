@@ -60,7 +60,7 @@ void Solver::show_disp()
 	imshow("disp_map", debug_view);
 	imwrite("D:\\output\\" + num2str(disp_cnt++) + "_disp.png", debug_view);
 
-	waitKey(5);
+	// waitKey(-1);
 	//destroyWindow("disp_map");
 }
 

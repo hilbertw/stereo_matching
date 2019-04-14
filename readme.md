@@ -18,5 +18,5 @@ Result
 -----
 Below shows the disparity and coresponding pointcloud mapping visualized using MeshLab.
 
-![disparity_0.jpg](https://github.com/hunterlew/stereo_matching/blob/master/stereo_matching/example/disp_0.png)
-![mapping_0.jpg](https://github.com/hunterlew/stereo_matching/blob/master/stereo_matching/example/mapping_0.png)
+![disparity_0.jpg](https://github.com/hunterlew/stereo_matching/blob/master/example/disp_0.png)
+![mapping_0.jpg](https://github.com/hunterlew/stereo_matching/blob/master/example/mapping_0.png)
