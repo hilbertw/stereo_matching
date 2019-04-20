@@ -42,7 +42,8 @@ int main(int argc, char **argv)
 			double en = get_cur_ms();
 			printf("done ...\n");
 			printf("time cost: %lf ms\n", en - be);
-			sv->show_disp();
+			Mat debug_view;
+			sv->show_disp(debug_view);
 		}
 		disp = sv->get_disp();
 	}
@@ -91,16 +92,19 @@ int main(int argc, char **argv)
 			double en = get_cur_ms();
 			printf("done ...\n");
 			printf("time cost: %lf ms\n", en - be);
-			g_sv->show_disp();
+			Mat debug_view;
+			g_sv->show_disp(debug_view);
 		}
 		disp = g_sv->get_disp();
 		printf("disp size: %d, %d\n", disp.rows, disp.cols);
 	}
 
-	Mat rgb_l = imread(example_addr+"example/left_0.png");
-	resize(rgb_l, rgb_l, Size(IMG_W, IMG_H));
-	cv::Mat grey_l;
-	cv::cvtColor(rgb_l, grey_l, CV_BGR2GRAY);
+	// Mat rgb_l = imread(example_addr+"example/left_0.png");
+	// resize(rgb_l, rgb_l, Size(IMG_W, IMG_H));
+	// cv::Mat grey_l;
+	// cv::cvtColor(rgb_l, grey_l, CV_BGR2GRAY);
+	Mat grey_l = imread(example_addr+"example/kitti_0_left.png", 0);
+	resize(grey_l, grey_l, Size(IMG_W, IMG_H));
 
 	// read calibration
 	std::ifstream in;
@@ -282,7 +286,8 @@ int main(int argc, char **argv)
 			double en = get_cur_ms();
 			printf("done ...\n");
 			printf("time cost: %lf ms\n\n", en - be);
-			sv->show_disp();
+			Mat debug_view;
+			sv->show_disp(debug_view);
 		}
 		disp = sv->get_disp();
 		delete sv;
@@ -306,7 +311,8 @@ int main(int argc, char **argv)
 			double en = get_cur_ms();
 			printf("done ...\n");
 			printf("time cost: %lf ms\n\n", en - be);
-			g_sv->show_disp();
+			Mat debug_view;
+			g_sv->show_disp(debug_view);
 		}
 		disp = g_sv->get_disp();
 		delete g_sv;

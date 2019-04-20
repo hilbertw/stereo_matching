@@ -23,7 +23,7 @@ public:
 	Solver();
 	virtual ~Solver();
 
-	void show_disp(); 
+	void show_disp(Mat &debug_view); 
 	virtual void process(Mat &img_l, Mat &img_r);
 	void build_dsi();
 	void build_cost_table();

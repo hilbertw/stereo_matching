@@ -3,13 +3,16 @@ add_definitions(-std=c++11)
 
 project(stereo_matching)
 
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  std_msgs
-)
-
 find_package(OpenCV 2.4.13 REQUIRED)
 find_package(CUDA REQUIRED)
+
+find_package(catkin REQUIRED COMPONENTS
+  cv_bridge
+  image_transport
+  roscpp
+  std_msgs
+  tf
+)
 
 catkin_package(
 #  INCLUDE_DIRS include
@@ -34,7 +37,8 @@ include_directories(
 
 cuda_add_executable(
     sgm
-    main.cpp
+    # demo1.cpp
+    demo2.cpp
     cpu_src/BM.cpp
     cpu_src/cost.cpp
     cpu_src/SGM.cpp

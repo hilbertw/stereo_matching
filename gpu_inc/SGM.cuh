@@ -24,7 +24,7 @@ public:
 	GPU_SGM();
 	~GPU_SGM();
 
-	void show_disp();
+	void show_disp(Mat &debug_view);
 	void process(Mat &img_l, Mat &img_r);
 	void colormap();
 	Mat get_disp() const

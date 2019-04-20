@@ -13,6 +13,13 @@ std::string num2str(int i)
 	return ss;
 }
 
+std::string num2strbeta(int i)
+{
+	char ss[20];
+	sprintf(ss, "%02d", i);
+	return ss;
+}
+
 void stereo_record(int camid, std::string address)
 {
 	int cnt = 0;

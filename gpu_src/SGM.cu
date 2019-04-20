@@ -201,7 +201,7 @@ void GPU_SGM::process(Mat &img_l, Mat &img_r)
 }
 
 
-void GPU_SGM::show_disp()
+void GPU_SGM::show_disp(Mat &debug_view)
 {
 	// left border invalid
 	for (int i = 0; i < filtered_disp.rows; i++)
@@ -216,7 +216,7 @@ void GPU_SGM::show_disp()
 	// convert to RGB for better observation
 	colormap();
 
-	Mat debug_view, tmp;
+	Mat tmp;
 
 	debug_view = debug_view.zeros(IMG_H * 2, IMG_W, CV_8UC3);
 	tmp = debug_view(Rect(0, 0, IMG_W, IMG_H));
@@ -224,14 +224,6 @@ void GPU_SGM::show_disp()
 	img_l.copyTo(tmp);
 	tmp = debug_view(Rect(0, IMG_H - 1, IMG_W, IMG_H));
 	colored_disp.copyTo(tmp);
-
-	namedWindow("disp_map", 1);
-	imshow("disp_map", debug_view);
-    imwrite(num2str(disp_cnt++) + "_disp.png", debug_view);
-
-    // waitKey(-1);
-	//destroyWindow("disp_map");
-
 }
 
 

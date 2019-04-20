@@ -31,7 +31,7 @@ Solver::Solver()
 }
 
 
-void Solver::show_disp()
+void Solver::show_disp(Mat &debug_view)
 {
 	// left border invalid
 	for (int i = 0; i < disp.rows; i++)
@@ -47,7 +47,7 @@ void Solver::show_disp()
 	// convert to RGB for better observation
 	colormap();
 
-	Mat debug_view, tmp;
+	Mat tmp;
 
 	debug_view = debug_view.zeros(IMG_H * 2, IMG_W, CV_8UC3);
 	tmp = debug_view(Rect(0, 0, IMG_W, IMG_H));
@@ -55,13 +55,6 @@ void Solver::show_disp()
 	img_l.copyTo(tmp);
 	tmp = debug_view(Rect(0, IMG_H - 1, IMG_W, IMG_H));
 	colored_disp.copyTo(tmp);
-
-	namedWindow("disp_map", 1);
-	imshow("disp_map", debug_view);
-	imwrite("D:\\output\\" + num2str(disp_cnt++) + "_disp.png", debug_view);
-
-	// waitKey(-1);
-	//destroyWindow("disp_map");
 }
 
 
@@ -458,7 +451,7 @@ void Solver::post_filter()
 	}
 
 	// median filter
-	vector<int> v;
+	std::vector<int> v;
 	for (int i = MEDIAN_FILTER_H / 2; i < filtered_disp.rows - MEDIAN_FILTER_H / 2; i++)
 	{
 		for (int j = MEDIAN_FILTER_W / 2; j < filtered_disp.cols - MEDIAN_FILTER_W / 2; j++)

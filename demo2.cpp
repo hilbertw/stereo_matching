@@ -1,0 +1,164 @@
+#include "cpu_inc/global.h"
+#include "cpu_inc/BM.h"
+#include "cpu_inc/SGM.h"
+#include "cpu_inc/utils.h"
+#include "gpu_inc/SGM.cuh"
+#include "gpu_inc/cost.cuh"
+
+std::string data_addr = "/home/hunterlew/data_stereo_flow_multiview/";
+
+struct CamIntrinsics
+{
+	float fx;
+	float fy;
+	float cx;
+	float cy;
+};
+
+CamIntrinsics read_calib(std::string file_addr)
+{
+	std::ifstream in;
+	in.open(file_addr);
+	if (!in.is_open()){
+		printf("reading calib file failed\n");
+		assert(false);
+	}
+	std::string str, str_tmp;
+	std::stringstream ss;
+	std::getline(in, str);  // only read left cam P0
+	ss.clear();
+	ss.str(str);
+
+	CamIntrinsics cam_para;
+	for (int i = 0; i < 13; i++)
+	{
+		if (i == 1)
+			ss >> cam_para.fx;
+		else if (i == 3)
+			ss >> cam_para.cx;
+		else if (i == 6)
+			ss >> cam_para.fy;
+		else if (i == 7)
+			ss >> cam_para.cy;
+		else
+			ss >> str_tmp;
+	}
+
+	return cam_para;
+}
+
+void publish_pointcloud(ros::Publisher pd_pub, 
+						const std::vector<cv::Point3d> &stereo_pts,
+						const std::vector<uchar> &stereo_pixel)
+{
+	sensor_msgs::PointCloud pd;
+	pd.header.stamp = ros::Time::now();
+	pd.header.frame_id = "my_frame";
+	pd.points.resize(stereo_pts.size());
+
+	pd.channels.resize(1);
+	pd.channels[0].name = "grey";
+	pd.channels[0].values.resize(stereo_pts.size());
+
+	for (int i = 0; i < stereo_pts.size(); ++i)
+	{
+		pd.points[i].x = stereo_pts[i].x;
+		pd.points[i].y = stereo_pts[i].y;
+		pd.points[i].z = stereo_pts[i].z;
+		pd.channels[0].values[i] = stereo_pixel[i];
+	}
+	pd_pub.publish(pd);
+}
+
+void publish_rgb(image_transport::Publisher disp_pub, const cv::Mat &disp)
+{
+	sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", disp).toImageMsg();
+	disp_pub.publish(msg);
+}
+
+int main(int argc, char **argv)
+{
+	ros::init(argc, argv, "stereo_node");
+	ros::NodeHandle nh("~");
+	ros::Publisher pd_pub = nh.advertise<sensor_msgs::PointCloud> ("stereo_pointcloud_cam0", 1);
+	image_transport::ImageTransport it(nh);
+	image_transport::Publisher disp_pub = it.advertise("disparity_cam0", 1);
+
+	Mat disp;
+
+	std::tr1::shared_ptr<SGM> sv(new SGM);
+	std::tr1::shared_ptr<GPU_SGM> g_sv(new GPU_SGM);
+
+	for (int i = 0; i <= 194; i++)
+	{
+		for (int j = 0; j <= 20; ++j)
+		{
+			std::string img_l_addr = data_addr+"testing/image_0/"+num2str(i)+"_"+num2strbeta(j)+".png";
+			std::string img_r_addr = data_addr+"testing/image_1/"+num2str(i)+"_"+num2strbeta(j)+".png";
+
+			Mat img_l = imread(img_l_addr, IMREAD_GRAYSCALE);
+			Mat img_r = imread(img_r_addr, IMREAD_GRAYSCALE);
+
+			printf("left size: %d, %d\n", img_l.rows, img_l.cols);
+			printf("right size: %d, %d\n", img_r.rows, img_r.cols);
+
+			resize(img_l, img_l, Size(IMG_W, IMG_H));
+			resize(img_r, img_r, Size(IMG_W, IMG_H));
+			printf("resized left size: %d, %d\n", img_l.rows, img_l.cols);
+			printf("resized right size: %d, %d\n", img_r.rows, img_r.cols);
+
+			printf("waiting ...\n");
+
+			double be = get_cur_ms();
+			g_sv->process(img_l, img_r);
+			double en = get_cur_ms();
+			printf("done ...\n");
+			printf("time cost: %lf ms\n", en - be);
+			Mat debug_view;
+			g_sv->show_disp(debug_view);
+			publish_rgb(disp_pub, debug_view);
+			// imwrite("/home/hunterlew/catkin_ws/src/stereo_matching/res/"+num2str(i)+"_"+num2strbeta(j)+"_disp.png", debug_view);
+			waitKey(1);
+
+			disp = g_sv->get_disp();
+			printf("disp size: %d, %d\n", disp.rows, disp.cols);
+
+			// read calibration
+			CamIntrinsics cam_para = read_calib(data_addr+"calib/"+num2str(i)+".txt");
+			printf("calib param: fx %f, fy %f, cx %f, cy %f\n",
+					cam_para.fx, cam_para.fy, cam_para.cx, cam_para.cy);
+
+			// convert to cam coords
+			std::vector<cv::Point3d> stereo_pts;
+			std::vector<uchar> stereo_pixel;
+
+			float max_range = 100;
+			double baseline = 0.5;
+			for (int i = 0; i < disp.rows; i++)
+			{
+				float *ptr = disp.ptr<float>(i);
+				for (int j = 0; j < disp.cols; j++)
+				{
+					if (ptr[j] == INVALID_DISP)  continue;
+					
+					double Zc = (cam_para.fx+cam_para.fy)/2.0 * baseline / (ptr[j]+1e-6);
+					if (Zc > max_range)  continue;
+
+					double Xc = (j - cam_para.cx/SCALE) * Zc / cam_para.fx;
+					double Yc = (i - cam_para.cy/SCALE) * Zc / cam_para.fy;
+
+					stereo_pts.push_back({Xc, Yc, Zc});
+					stereo_pixel.push_back(img_l.at<uchar>(i,j));
+				}
+			}
+
+			printf("pointcloud size: %zu, %zu\n", stereo_pts.size(), stereo_pixel.size());
+			publish_pointcloud(pd_pub, stereo_pts, stereo_pixel);
+			usleep(1000);
+		}
+	}
+	
+	ros::spin();
+	cv::destroyAllWindows();
+	return 0;
+}
