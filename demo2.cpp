@@ -47,6 +47,7 @@ CamIntrinsics read_calib(std::string file_addr)
 	return cam_para;
 }
 
+// if "no tf data" in rviz, run "rosrun tf static_transform_publisher 0 0 0 0 0 0 1 map my_frame 10"
 void publish_pointcloud(ros::Publisher pd_pub, 
 						const std::vector<cv::Point3d> &stereo_pts,
 						const std::vector<uchar> &stereo_pixel)
@@ -72,7 +73,13 @@ void publish_pointcloud(ros::Publisher pd_pub,
 
 void publish_rgb(image_transport::Publisher disp_pub, const cv::Mat &disp)
 {
-	sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", disp).toImageMsg();
+	sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "8UC3", disp).toImageMsg();
+	disp_pub.publish(msg);
+}
+
+void publish_disp(image_transport::Publisher disp_pub, const cv::Mat &disp)
+{
+	sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "32FC1", disp).toImageMsg();
 	disp_pub.publish(msg);
 }
 
@@ -80,18 +87,24 @@ int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "stereo_node");
 	ros::NodeHandle nh("~");
-	ros::Publisher pd_pub = nh.advertise<sensor_msgs::PointCloud> ("stereo_pointcloud_cam0", 1);
+	ros::Publisher pd_pub = nh.advertise<sensor_msgs::PointCloud> ("/stereo_cam0/pointcloud", 1);
 	image_transport::ImageTransport it(nh);
-	image_transport::Publisher disp_pub = it.advertise("disparity_cam0", 1);
+	image_transport::Publisher disp_pub = it.advertise("/stereo_cam0/disp", 1);
+	image_transport::Publisher debug_pub = it.advertise("/stereo_cam0/debug_view", 1);
 
 	Mat disp;
+	Mat debug_view;
 
 	std::tr1::shared_ptr<SGM> sv(new SGM);
 	std::tr1::shared_ptr<GPU_SGM> g_sv(new GPU_SGM);
 
-	for (int i = 0; i <= 194; i++)
+	// for (int i = 0; i <= 194; i++)
+	// {
+	// 	for (int j = 0; j <= 20; ++j)
+	// 	{
+	for (int i = 0; i <= 0; i++)
 	{
-		for (int j = 0; j <= 20; ++j)
+		for (int j = 0; j <= 0; ++j)
 		{
 			std::string img_l_addr = data_addr+"testing/image_0/"+num2str(i)+"_"+num2strbeta(j)+".png";
 			std::string img_r_addr = data_addr+"testing/image_1/"+num2str(i)+"_"+num2strbeta(j)+".png";
@@ -114,14 +127,15 @@ int main(int argc, char **argv)
 			double en = get_cur_ms();
 			printf("done ...\n");
 			printf("time cost: %lf ms\n", en - be);
-			Mat debug_view;
-			g_sv->show_disp(debug_view);
-			publish_rgb(disp_pub, debug_view);
-			// imwrite("/home/hunterlew/catkin_ws/src/stereo_matching/res/"+num2str(i)+"_"+num2strbeta(j)+"_disp.png", debug_view);
-			waitKey(1);
 
 			disp = g_sv->get_disp();
 			printf("disp size: %d, %d\n", disp.rows, disp.cols);
+			publish_disp(disp_pub, disp);
+
+			g_sv->show_disp(debug_view);
+			publish_rgb(debug_pub, debug_view);
+
+			waitKey(1);
 
 			// read calibration
 			CamIntrinsics cam_para = read_calib(data_addr+"calib/"+num2str(i)+".txt");
@@ -139,6 +153,8 @@ int main(int argc, char **argv)
 				float *ptr = disp.ptr<float>(i);
 				for (int j = 0; j < disp.cols; j++)
 				{
+					// printf("%f, ", ptr[j]);
+
 					if (ptr[j] == INVALID_DISP)  continue;
 					
 					double Zc = (cam_para.fx+cam_para.fy)/2.0 * baseline / (ptr[j]+1e-6);
