@@ -283,3 +283,9 @@ void GPU_SGM::colormap()
 		}
 	}
 }
+
+Mat GPU_SGM::pixel_unlock(Mat &img_l, Mat &img_r, Mat &disp)
+{
+	return pu.unlock(img_l, img_r, disp);
+}
+

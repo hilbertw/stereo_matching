@@ -130,6 +130,10 @@ int main(int argc, char **argv)
 
 			disp = g_sv->get_disp();
 			printf("disp size: %d, %d\n", disp.rows, disp.cols);
+
+			Mat disp_bk = disp.clone();
+			disp = g_sv->pixel_unlock(img_l, img_r, disp_bk);
+			
 			publish_disp(disp_pub, disp);
 
 			g_sv->show_disp(debug_view);

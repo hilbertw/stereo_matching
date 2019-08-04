@@ -8,6 +8,7 @@ __global__ void cu_subpixel(float *d_cost, uchar *d_disp, float *d_filtered_disp
 	int col = index % img_w;
 	int row = index / img_w;
 
+	/*
 	int d = d_disp[index];
 	if (d > max_disp - 1)
 	{
@@ -29,6 +30,9 @@ __global__ void cu_subpixel(float *d_cost, uchar *d_disp, float *d_filtered_disp
 			d_filtered_disp[index] = max_disp - 1;
 		}
 	}
+	*/
+
+	d_filtered_disp[index] = d_disp[index];
 }
 
 

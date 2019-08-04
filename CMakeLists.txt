@@ -39,6 +39,7 @@ cuda_add_executable(
     sgm
     # demo1.cpp
     demo2.cpp
+    cpu_src/PixelUnlocker.cpp
     cpu_src/BM.cpp
     cpu_src/cost.cpp
     cpu_src/SGM.cpp

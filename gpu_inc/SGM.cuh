@@ -4,6 +4,8 @@
 #include "../gpu_inc/aggregation.cuh"
 #include "../gpu_inc/post_filter.cuh"
 
+#include "../cpu_inc/PixelUnlocker.h"
+
 
 const int CU_WIN_H = 7;
 const int CU_WIN_W = 9;
@@ -26,6 +28,7 @@ public:
 
 	void show_disp(Mat &debug_view);
 	void process(Mat &img_l, Mat &img_r);
+	Mat pixel_unlock(Mat &img_l, Mat &img_r, Mat &disp);
 	void colormap();
 	Mat get_disp() const
 	{
@@ -51,4 +54,6 @@ private:
 	int *d_label, *d_area;
 
 	int disp_cnt;
+
+	PixelUnlocker pu;
 };
