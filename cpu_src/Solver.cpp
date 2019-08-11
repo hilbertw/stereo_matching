@@ -16,9 +16,9 @@ Solver::Solver()
 	{
 		weight = new float[WIN_H * WIN_W];
 #pragma omp parallel for
-		for (int i = 0; i < WIN_H; i++)
+        for (int i = 0; i < WIN_H; ++i)
 		{
-			for (int j = 0; j < WIN_W; j++)
+            for (int j = 0; j < WIN_W; ++j)
 			{
 				weight[i*WIN_W + j] = exp(((i - WIN_H / 2)*(i - WIN_H / 2) + (j - WIN_W / 2)*(j - WIN_W / 2)) / -25.0);
 				//std::cout << weight[i*WIN_W + j] << "\t";
@@ -34,14 +34,26 @@ Solver::Solver()
 void Solver::show_disp(Mat &debug_view)
 {
 	// left border invalid
-	for (int i = 0; i < disp.rows; i++)
+    for (int i = 0; i < disp.rows; ++i)
 	{
 		//uchar *ptr = disp.ptr<uchar>(i);
 		float *ptr = filtered_disp.ptr<float>(i);
-		for(int j = 0; j < MAX_DISP / SCALE; j++)
-		{
-			ptr[j] = INVALID_DISP;
-		}
+
+//        if (i < disp.rows / 4)
+//        {
+//            for(int j = 0; j < disp.cols; ++j)
+//            {
+//                ptr[j] = INVALID_DISP;
+//            }
+//        }
+
+//        else
+        {
+            for(int j = 0; j < MAX_DISP / SCALE; ++j)
+            {
+                ptr[j] = INVALID_DISP;
+            }
+        }
 	}
 	
 	// convert to RGB for better observation
@@ -68,11 +80,11 @@ void Solver::process(Mat &img_l, Mat &img_r)
 void Solver::build_dsi()
 {
 #pragma omp parallel for
-	for (int i = 0; i < IMG_H; i++)
+    for (int i = 0; i < IMG_H; ++i)
 	{
-		for (int j = 0; j < IMG_W; j++)
+        for (int j = 0; j < IMG_W; ++j)
 		{
-			for (int d = 0; d < MAX_DISP; d++)
+            for (int d = 0; d < MAX_DISP; ++d)
 			{
 				int index = i * IMG_W * MAX_DISP + j * MAX_DISP + d;
 				//cost[index] = SSD(img_l, img_r, Point(j, i), d, WIN_H, WIN_W, weight);
@@ -88,12 +100,21 @@ void Solver::build_dsi()
 
 void Solver::build_cost_table()
 {
+    constexpr int v_en = IMG_H-WIN_H/2;
+    constexpr int u_en = IMG_W-WIN_W/2;
+
+    cv::Mat img_l_filtered, img_r_filtered;
+    cv::GaussianBlur(img_l, img_l_filtered, cv::Size(3,3), 2, 1);  // denoise
+    cv::GaussianBlur(img_r, img_r_filtered, cv::Size(3,3), 2, 1);  // denoise
+
 #pragma omp parallel for
-	for (int i = 0; i < IMG_H; i++)
+    for (int i = WIN_H/2; i < v_en; ++i)
 	{
-		for (int j = 0; j < IMG_W; j++)
+        for (int j = WIN_W/2; j < u_en; ++j)
 		{
-			CT_pts(img_l, img_r, j, i, WIN_H, WIN_W, weight, cost_table_l, cost_table_r);
+            // TODO: esemble sad cost
+//            CT_pts(img_l, img_r, j, i, WIN_H, WIN_W, weight, cost_table_l, cost_table_r);
+            CT_pts(img_l_filtered, img_r_filtered, j, i, WIN_H, WIN_W, weight, cost_table_l, cost_table_r);
 		}
 	}
 }
@@ -101,16 +122,21 @@ void Solver::build_cost_table()
 
 void Solver::build_dsi_from_table()
 {
+    constexpr int v_en = IMG_H-WIN_H/2;
+    constexpr int u_en = IMG_W-WIN_W/2;
+
 #pragma omp parallel for
-	for (int i = 0; i < IMG_H; i++)
+    for (int i = WIN_H/2; i < v_en; ++i)
 	{
-		for (int j = 0; j < IMG_W; j++)
+        for (int j = WIN_W/2; j < u_en; ++j)
 		{
-			for (int d = 0; d < MAX_DISP; d++)
+            for (int d = 0; d < MAX_DISP; ++d)
 			{
 				int index = i * IMG_W * MAX_DISP + j * MAX_DISP + d;
+                int d_bk = std::max(j - d/SCALE, 0);
+
 				uint64_t ct_l = cost_table_l[i*IMG_W + j];
-				uint64_t ct_r = cost_table_r[i*IMG_W + MAX(j - d / SCALE, 0)];
+                uint64_t ct_r = cost_table_r[i*IMG_W + d_bk];
 				cost[index] = hamming_cost(ct_l, ct_r);
 			}
 		}
@@ -121,11 +147,11 @@ void Solver::build_dsi_from_table()
 float Solver::find_dsi_mean_max()
 {
 	double max_cost = 0, mean_cost = 0;
-	for (int i = 0; i < IMG_H; i++)
+    for (int i = 0; i < IMG_H; ++i)
 	{
-		for (int j = 0; j < IMG_W; j++)
+        for (int j = 0; j < IMG_W; ++j)
 		{
-			for (int d = 0; d < MAX_DISP; d++)
+            for (int d = 0; d < MAX_DISP; ++d)
 			{
 				int index = i * IMG_W * MAX_DISP + j * MAX_DISP + d;
 				mean_cost += cost[index];
@@ -145,9 +171,9 @@ float Solver::find_dsi_mean_max()
 float Solver::find_table_mean_max()
 {
 	double max_cost = 0, mean_cost = 0;
-	for (int i = 0; i < IMG_H; i++)
+    for (int i = 0; i < IMG_H; ++i)
 	{
-		for (int j = 0; j < IMG_W; j++)
+        for (int j = 0; j < IMG_W; ++j)
 		{
 			int index = i * IMG_W + j;
 			mean_cost += cost_table_r[index];
@@ -165,28 +191,44 @@ float Solver::find_table_mean_max()
 
 void Solver::cost_horizontal_filter(int win_size)
 {
-	for (int i = 0; i < IMG_H; i++)
+    constexpr int v_be = WIN_H/2;
+    constexpr int v_en = IMG_H-WIN_H/2;
+    const int u_be = std::max(WIN_W/2, win_size/2);
+    const int u_en = std::min(IMG_W-WIN_W/2, IMG_W - win_size/2);
+
+    const int index_step = (win_size/2+1)*MAX_DISP;
+
+    // for each row, smooth horizontal cost in the same disparity
+    for (int i = v_be; i < v_en; ++i)
 	{
-		for (int d = 0; d < MAX_DISP; d++)
+        for (int d = 0; d < MAX_DISP; ++d)
 		{
 			float sum = 0;
 			int index = i * IMG_W * MAX_DISP + d;
+
+            // ignore border
+            for (int j = 0; j<u_be; ++j)
+                index += MAX_DISP;
+
 			// initialize
-			for (int k = 0; k < win_size; k++)
+            for (int j = u_be; j < u_be+win_size; ++j)
 			{
 				sum += cost[index];
-				index += MAX_DISP;
+                index += MAX_DISP;  // next index in the same disparity
 			}
+
 			// box filter
-			for (int j = win_size/2; j < IMG_W - win_size/2; j++)
+            for (int j = u_be+win_size/2; j < u_en - win_size/2; ++j)
 			{
-				cost[i * IMG_W * MAX_DISP + j * MAX_DISP + d] = sum / win_size;
-				if (j < IMG_W - win_size / 2 - 1)
-				{
-					sum += cost[index];
-					sum -= cost[index - win_size * MAX_DISP];
-					index += MAX_DISP;
-				}
+//				cost[i * IMG_W * MAX_DISP + j * MAX_DISP + d] = sum / win_size;
+                cost[index - index_step] = sum / win_size;
+
+                if (j == u_en - win_size/2 - 1)
+                    break;
+
+                sum += cost[index];
+                sum -= cost[index - win_size * MAX_DISP];
+                index += MAX_DISP;
 			}
 		}
 	}
@@ -195,28 +237,45 @@ void Solver::cost_horizontal_filter(int win_size)
 
 void Solver::cost_vertical_filter(int win_size)
 {
-	for (int j = 0; j < IMG_W; j++)
+    constexpr int u_be = WIN_W/2;
+    constexpr int u_en = IMG_W-WIN_W/2;
+    const int v_be = std::max(WIN_H/2, win_size/2);
+    const int v_en = std::min(IMG_H-WIN_H/2, IMG_H - win_size/2);
+
+    constexpr int step = IMG_W * MAX_DISP;
+    const int index_step = (win_size/2+1)*step;
+
+    // for each col, smooth vertical cost in the same disparity
+    for (int j = u_be; j < u_en; ++j)
 	{
-		for (int d = 0; d < MAX_DISP; d++)
+        for (int d = 0; d < MAX_DISP; ++d)
 		{
 			float sum = 0;
 			int index = j * MAX_DISP + d;
+
+            // ignore border
+            for (int i = 0; i<v_be; ++i)
+                index += step;
+
 			// initialize
-			for (int k = 0; k < win_size; k++)
+            for (int i = v_be; i < v_be+win_size; ++i)
 			{
 				sum += cost[index];
-				index += IMG_W * MAX_DISP;
+                index += step;
 			}
+
 			// box filter
-			for (int i = win_size/2; i < IMG_H - win_size/2; i++)
+            for (int i = v_be+win_size/2; i < v_en - win_size/2; ++i)
 			{
-				cost[i * IMG_W * MAX_DISP + j * MAX_DISP + d] = sum / win_size;
-				if (i < IMG_H - win_size / 2 - 1)
-				{
-					sum += cost[index];
-					sum -= cost[index - win_size * IMG_W * MAX_DISP];
-					index += IMG_W * MAX_DISP;
-				}
+//				cost[i * IMG_W * MAX_DISP + j * MAX_DISP + d] = sum / win_size;
+                cost[index - index_step] = sum / win_size;
+
+                if (i == v_en - win_size/2 - 1)
+                    break;
+
+                sum += cost[index];
+                sum -= cost[index - win_size * step];
+                index += step;
 			}
 		}
 	}
@@ -232,9 +291,9 @@ void Solver::fetch_cost(float *p)
 void Solver::fetch_disparity(uchar *d)
 {
 	int cnt = 0;
-	for (int i = 0; i < disp.rows; i++)
+    for (int i = 0; i < disp.rows; ++i)
 	{
-		for (int j = 0; j < disp.cols; j++)
+        for (int j = 0; j < disp.cols; ++j)
 		{
 			disp.at<uchar>(i, j) = d[cnt++];
 		}
@@ -245,9 +304,9 @@ void Solver::fetch_disparity(uchar *d)
 void Solver::fetch_disparity(float *d)
 {
 	int cnt = 0;
-	for (int i = 0; i < filtered_disp.rows; i++)
+    for (int i = 0; i < filtered_disp.rows; ++i)
 	{
-		for (int j = 0; j < filtered_disp.cols; j++)
+        for (int j = 0; j < filtered_disp.cols; ++j)
 		{
 			filtered_disp.at<float>(i, j) = d[cnt++];
 		}
@@ -308,7 +367,7 @@ static void speckle_filter(Mat &m, int value, int max_size, int max_dis)
 	bool *visited = new bool[m.rows * m.cols];
 	int *label = new int[m.rows * m.cols];
 	int *area = new int[m.rows * m.cols];
-	for (int i = 0; i < m.rows * m.cols; i++)
+    for (int i = 0; i < m.rows * m.cols; ++i)
 	{
 		visited[i] = 0;
 		label[i] = 0;
@@ -316,9 +375,9 @@ static void speckle_filter(Mat &m, int value, int max_size, int max_dis)
 	}
 
 	int label_cnt = 0;
-	for (int i = 0; i < m.rows; i++)
+    for (int i = 0; i < m.rows; ++i)
 	{
-		for (int j = 0; j < m.cols; j++)
+        for (int j = 0; j < m.cols; ++j)
 		{
 			if (visited[i * m.cols + j])  continue;
 
@@ -328,9 +387,9 @@ static void speckle_filter(Mat &m, int value, int max_size, int max_dis)
 		}
 	}
 
-	for (int i = 0; i < m.rows; i++)
+    for (int i = 0; i < m.rows; ++i)
 	{
-		for (int j = 0; j < m.cols; j++)
+        for (int j = 0; j < m.cols; ++j)
 		{
 			if (area[label[i*m.cols + j]] <= max_size)
 			{
@@ -371,14 +430,14 @@ static void speckle_filter_new(Mat &m, int value, int max_size, int max_dis)
 	int *label = new int[m.rows * m.cols];
 	int *area = new int[m.rows * m.cols];
 #pragma omp parallel for
-	for (int i = 0; i < m.rows * m.cols; i++)
+    for (int i = 0; i < m.rows * m.cols; ++i)
 	{
 		label[i] = i;
 		area[i] = 0;
 	}
 
 #pragma omp parallel for
-	for (int i = 0; i < m.rows * m.cols; i++)
+    for (int i = 0; i < m.rows * m.cols; ++i)
 	{
 		int row = i / m.cols;
 		int col = i % m.cols;
@@ -401,16 +460,16 @@ static void speckle_filter_new(Mat &m, int value, int max_size, int max_dis)
 	}
 
 #pragma omp parallel for
-	for (int i = 0; i < m.rows * m.cols; i++)
+    for (int i = 0; i < m.rows * m.cols; ++i)
 	{
 		label[i] = Find(i, label);
 		area[label[i]]++;
 	}
 
 #pragma omp parallel for
-	for (int i = 0; i < m.rows; i++)
+    for (int i = 0; i < m.rows; ++i)
 	{
-		for (int j = 0; j < m.cols; j++)
+        for (int j = 0; j < m.cols; ++j)
 		{
 			if (area[label[i*m.cols + j]] <= max_size)
 			{
@@ -426,9 +485,9 @@ void Solver::post_filter()
 	double be = get_cur_ms();
 	// sub-pixel
 #pragma omp parallel for
-	for (int i = 0; i < IMG_H; i++)
+    for (int i = 0; i < IMG_H; ++i)
 	{
-		for (int j = 0; j < IMG_W; j++)
+        for (int j = 0; j < IMG_W; ++j)
 		{
 			int d = disp.at<uchar>(i, j);
 			if (d > MAX_DISP-1)
@@ -445,23 +504,24 @@ void Solver::post_filter()
 				float cost_d = cost[index];
 				float cost_d_sub = cost[index - 1];
 				float cost_d_plus = cost[index + 1];
-				filtered_disp.at<float>(i, j) = MIN(d + (cost_d_sub - cost_d_plus) / (2 * (cost_d_sub + cost_d_plus - 2 * cost_d)), MAX_DISP-1);
+                filtered_disp.at<float>(i, j) =
+                        std::min(d + (cost_d_sub - cost_d_plus) / (2 * (cost_d_sub + cost_d_plus - 2 * cost_d)), (MAX_DISP-1)*1.f);
 			}
 		}
 	}
 
 	// median filter
 	std::vector<int> v;
-	for (int i = MEDIAN_FILTER_H / 2; i < filtered_disp.rows - MEDIAN_FILTER_H / 2; i++)
+    for (int i = MEDIAN_FILTER_H / 2; i < filtered_disp.rows - MEDIAN_FILTER_H / 2; ++i)
 	{
-		for (int j = MEDIAN_FILTER_W / 2; j < filtered_disp.cols - MEDIAN_FILTER_W / 2; j++)
+        for (int j = MEDIAN_FILTER_W / 2; j < filtered_disp.cols - MEDIAN_FILTER_W / 2; ++j)
 		{
 			if (filtered_disp.at<float>(i, j) <= MAX_DISP-1)  continue;
 			int valid_cnt = 0;
 			v.clear();
-			for (int m = i - MEDIAN_FILTER_H / 2; m <= i + MEDIAN_FILTER_H / 2; m++)
+            for (int m = i - MEDIAN_FILTER_H / 2; m <= i + MEDIAN_FILTER_H / 2; ++m)
 			{
-				for (int n = j - MEDIAN_FILTER_W / 2; n <= j + MEDIAN_FILTER_W / 2; n++)
+                for (int n = j - MEDIAN_FILTER_W / 2; n <= j + MEDIAN_FILTER_W / 2; ++n)
 				{
 					if (filtered_disp.at<float>(m, n) <= MAX_DISP - 1)
 					{
@@ -484,9 +544,9 @@ void Solver::post_filter()
 	printf("post process takes %lf ms\n", get_cur_ms() - be);
 
 	/*
-	for (int i = 0; i < IMG_H; i++)
+    for (int i = 0; i < IMG_H; ++i)
 	{
-		for (int j = 0; j < IMG_W; j++)
+        for (int j = 0; j < IMG_W; ++j)
 		{
 			int d = disp.at<uchar>(i, j);
 			float d_ = filtered_disp.at<float>(i, j);
@@ -501,9 +561,9 @@ void Solver::post_filter()
 void  Solver::colormap()
 {
 	float disp_value = 0;
-	for (int i = 0; i < disp.rows; i++)
+    for (int i = 0; i < disp.rows; ++i)
 	{
-		for (int j = 0; j < disp.cols; j++)
+        for (int j = 0; j < disp.cols; ++j)
 		{
 			disp_value = filtered_disp.at<float>(i, j);
 			//disp_value = disp.at<uchar>(i, j);
@@ -559,6 +619,8 @@ void  Solver::colormap()
 Solver::~Solver()
 {
 	delete[] cost;
+    delete[] cost_table_l;
+    delete[] cost_table_r;
 	if (WEIGHTED_COST)
 	{
 		delete[] weight;

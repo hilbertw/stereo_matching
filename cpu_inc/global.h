@@ -29,7 +29,7 @@
 
 using namespace cv;
 
-const int SCALE = 2;
+const int SCALE = 1;
 
 // kitti config
 const int IMG_W = 1240 / SCALE;

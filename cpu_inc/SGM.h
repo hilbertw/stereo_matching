@@ -4,7 +4,7 @@
 #include "utils.h"
 
 
-const bool USE_8_PATH = 1;
+const bool USE_8_PATH = true;
 
 
 class SGM : public Solver

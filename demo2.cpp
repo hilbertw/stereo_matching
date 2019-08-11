@@ -6,6 +6,7 @@
 #include "gpu_inc/cost.cuh"
 
 std::string data_addr = "/home/hunterlew/data_stereo_flow_multiview/";
+std::string res_addr = "/home/hunterlew/catkin_ws/src/stereo_matching/res2/";
 
 struct CamIntrinsics
 {
@@ -95,17 +96,17 @@ int main(int argc, char **argv)
 	Mat disp;
 	Mat debug_view;
 
-	std::tr1::shared_ptr<SGM> sv(new SGM);
-	std::tr1::shared_ptr<GPU_SGM> g_sv(new GPU_SGM);
+    auto sv = std::make_shared<SGM>();
+//    auto g_sv = std::make_shared<GPU_SGM>();
 
-	// for (int i = 0; i <= 194; i++)
-	// {
-	// 	for (int j = 0; j <= 20; ++j)
-	// 	{
-	for (int i = 0; i <= 0; i++)
-	{
-		for (int j = 0; j <= 0; ++j)
-		{
+//     for (int i = 0; i <= 194; i++)
+//     {
+//        for (int j = 0; j <= 20; ++j)
+//        {
+    for (int i = 0; i <= 0; i++)
+    {
+        for (int j = 0; j <= 0; ++j)
+        {
 			std::string img_l_addr = data_addr+"testing/image_0/"+num2str(i)+"_"+num2strbeta(j)+".png";
 			std::string img_r_addr = data_addr+"testing/image_1/"+num2str(i)+"_"+num2strbeta(j)+".png";
 
@@ -123,17 +124,22 @@ int main(int argc, char **argv)
 			printf("waiting ...\n");
 
 			double be = get_cur_ms();
-			g_sv->process(img_l, img_r);
+//            g_sv->process(img_l, img_r);
+            sv->process(img_l, img_r);
 			double en = get_cur_ms();
 			printf("done ...\n");
 			printf("time cost: %lf ms\n", en - be);
 
-			disp = g_sv->get_disp();
+//            disp = g_sv->get_disp();
+            disp = sv->get_disp();
 			printf("disp size: %d, %d\n", disp.rows, disp.cols);
 			publish_disp(disp_pub, disp);
 
-			g_sv->show_disp(debug_view);
+//            g_sv->show_disp(debug_view);
+            sv->show_disp(debug_view);
 			publish_rgb(debug_pub, debug_view);
+
+//            imwrite(res_addr+num2str(i)+"_"+num2strbeta(j)+"_disp.png", debug_view);
 
 			waitKey(1);
 

@@ -5,8 +5,8 @@
 #include "cost.h"
 
 
-const int WIN_H = 7;
-const int WIN_W = 9;
+const int WIN_H = 7 / SCALE;
+const int WIN_W = 9 / SCALE;
 const int COST_WIN_H = 3 / SCALE;
 const int COST_WIN_W = 5 / SCALE;
 const float UNIQUE_RATIO = 0.7;
