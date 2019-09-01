@@ -70,5 +70,12 @@ void BM::process(Mat &img_l, Mat &img_r)
 }
 
 
+void BM::process(Mat &img_l, Mat &img_r, Mat &sky_mask)
+{
+    this->sky_mask = sky_mask;
+    process(img_l, img_r);
+}
+
+
 BM::~BM()
 {}

@@ -13,7 +13,7 @@ const float UNIQUE_RATIO = 0.7;
 const bool WEIGHTED_COST = 0;
 const int MEDIAN_FILTER_H = 5;
 const int MEDIAN_FILTER_W = 5;
-const int SPECKLE_SIZE = 1000 / SCALE;
+const int SPECKLE_SIZE = 2000 / SCALE;
 const int SPECKLE_DIS = 2;
 
 
@@ -24,7 +24,8 @@ public:
 	virtual ~Solver();
 
 	void show_disp(Mat &debug_view); 
-	virtual void process(Mat &img_l, Mat &img_r);
+    virtual void process(Mat &img_l, Mat &img_r) =0;
+    virtual void process(Mat &img_l, Mat &img_r, Mat &sky_mask) =0;
 	void build_dsi();
 	void build_cost_table();
 	void build_dsi_from_table();
@@ -49,5 +50,6 @@ protected:
 	float *cost;
 	float *weight;
 	int disp_cnt;
+    Mat sky_mask;
 };
 

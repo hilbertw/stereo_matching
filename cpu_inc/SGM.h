@@ -14,6 +14,7 @@ public:
 	virtual ~SGM();
 
 	virtual void process(Mat &img_l, Mat &img_r);
+    virtual void process(Mat &img_l, Mat &img_r, Mat &sky_mask);
 
 private:
 	float *L1, *L2, *L3, *L4, *L5, *L6, *L7, *L8;

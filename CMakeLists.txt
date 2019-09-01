@@ -59,6 +59,8 @@ cuda_add_executable(
     gpu_src/cost.cu
     gpu_src/post_filter.cu
     gpu_src/SGM.cu
+
+    sky_detector/imageSkyDetector.cpp
 )
 
 target_link_libraries(

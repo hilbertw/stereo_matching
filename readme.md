@@ -2,6 +2,8 @@ Stereo Matching
 ==================
 This repository is an example for stereo matching I've been learning recently. Support both cpu and gpu working.
 
+2019-09-05: Support sky mask, using a modified version of [sky-detector](https://github.com/MaybeShewill-CV/sky-detector).
+
 Pre-requisites
 --------------
 ROS

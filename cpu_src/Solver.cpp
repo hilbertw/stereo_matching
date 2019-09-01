@@ -28,6 +28,8 @@ Solver::Solver()
 	}
 	//std::cin.get();
 	disp_cnt = 0;
+
+    sky_mask.release();
 }
 
 
@@ -67,13 +69,6 @@ void Solver::show_disp(Mat &debug_view)
 	img_l.copyTo(tmp);
 	tmp = debug_view(Rect(0, IMG_H - 1, IMG_W, IMG_H));
 	colored_disp.copyTo(tmp);
-}
-
-
-void Solver::process(Mat &img_l, Mat &img_r)
-{
-	std::cout << "Class Solver does nothing!" << std::endl;
-	std::cin.get();
 }
 
 
@@ -125,20 +120,52 @@ void Solver::build_dsi_from_table()
     constexpr int v_en = IMG_H-WIN_H/2;
     constexpr int u_en = IMG_W-WIN_W/2;
 
+    bool has_sky_mask = !(sky_mask.empty() || !sky_mask.data);
+//    has_sky_mask = false;
+    if (has_sky_mask)
+        printf("sky mask found\n");
+    else
+        printf("no sky mask\n");
+
 #pragma omp parallel for
     for (int i = WIN_H/2; i < v_en; ++i)
 	{
+        const uchar *ptr = NULL;
+        if (has_sky_mask)
+        {
+            ptr = sky_mask.ptr<uchar>(i);
+        }
+
         for (int j = WIN_W/2; j < u_en; ++j)
 		{
-            for (int d = 0; d < MAX_DISP; ++d)
-			{
-				int index = i * IMG_W * MAX_DISP + j * MAX_DISP + d;
-                int d_bk = std::max(j - d/SCALE, 0);
+            int bias = i * IMG_W * MAX_DISP + j * MAX_DISP;
+            if (has_sky_mask && ptr[j] == 255)
+            {
+                for (int d = 0; d < MAX_DISP; ++d)
+                {
+                    int index = bias + d;
+                    if (d==0)
+                    {
+                        cost[index] = 0;
+                    }
+                    else
+                    {
+                        cost[index] = 999999;
+                    }
+                }
+            }
+            else
+            {
+                for (int d = 0; d < MAX_DISP; ++d)
+                {
+                    int index = bias + d;
+                    int d_bk = std::max(j - d/SCALE, 0);
 
-				uint64_t ct_l = cost_table_l[i*IMG_W + j];
-                uint64_t ct_r = cost_table_r[i*IMG_W + d_bk];
-				cost[index] = hamming_cost(ct_l, ct_r);
-			}
+                    uint64_t ct_l = cost_table_l[i*IMG_W + j];
+                    uint64_t ct_r = cost_table_r[i*IMG_W + d_bk];
+                    cost[index] = hamming_cost(ct_l, ct_r);
+                }
+            }
 		}
 	}
 }

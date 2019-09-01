@@ -14,7 +14,8 @@ SOURCES += \
     cpu_src/Solver.cpp \
     cpu_src/utils.cpp \
     demo1.cpp \
-    demo2.cpp
+    demo2.cpp \
+    sky_detector/imageSkyDetector.cpp
 
 HEADERS += \
     cpu_inc/BM.h \
@@ -26,7 +27,8 @@ HEADERS += \
     gpu_inc/aggregation.cuh \
     gpu_inc/cost.cuh \
     gpu_inc/post_filter.cuh \
-    gpu_inc/SGM.cuh
+    gpu_inc/SGM.cuh \
+    sky_detector/imageSkyDetector.h
 
 DISTFILES += \
     package.xml \

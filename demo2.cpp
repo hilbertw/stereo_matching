@@ -5,6 +5,9 @@
 #include "gpu_inc/SGM.cuh"
 #include "gpu_inc/cost.cuh"
 
+#include "sky_detector/imageSkyDetector.h"
+
+
 std::string data_addr = "/home/hunterlew/data_stereo_flow_multiview/";
 std::string res_addr = "/home/hunterlew/catkin_ws/src/stereo_matching/res2/";
 
@@ -99,6 +102,8 @@ int main(int argc, char **argv)
     auto sv = std::make_shared<SGM>();
 //    auto g_sv = std::make_shared<GPU_SGM>();
 
+    auto sky_det = std::make_shared<sky_detector::SkyAreaDetector>();
+
 //     for (int i = 0; i <= 194; i++)
 //     {
 //        for (int j = 0; j <= 20; ++j)
@@ -107,8 +112,13 @@ int main(int argc, char **argv)
     {
         for (int j = 0; j <= 0; ++j)
         {
-			std::string img_l_addr = data_addr+"testing/image_0/"+num2str(i)+"_"+num2strbeta(j)+".png";
-			std::string img_r_addr = data_addr+"testing/image_1/"+num2str(i)+"_"+num2strbeta(j)+".png";
+            std::string img_l_addr = data_addr+"testing/image_0/"+num2str(i)+"_"+num2strbeta(j)+".png";
+            std::string img_r_addr = data_addr+"testing/image_1/"+num2str(i)+"_"+num2strbeta(j)+".png";
+            std::cout << "processing " << img_l_addr << std::endl;
+
+//            std::string img_index = "000027_07";
+//            std::string img_l_addr = data_addr+"testing/image_0/"+img_index+".png";
+//            std::string img_r_addr = data_addr+"testing/image_1/"+img_index+".png";
 
 			Mat img_l = imread(img_l_addr, IMREAD_GRAYSCALE);
 			Mat img_r = imread(img_r_addr, IMREAD_GRAYSCALE);
@@ -121,11 +131,15 @@ int main(int argc, char **argv)
 			printf("resized left size: %d, %d\n", img_l.rows, img_l.cols);
 			printf("resized right size: %d, %d\n", img_r.rows, img_r.cols);
 
+            Mat sky_mask;
+            sky_det->detect(img_l, res_addr+num2str(i)+"_"+num2strbeta(j)+"_sky.png", sky_mask);
+//            sky_det->detect(img_l, res_addr+"test_sky.png", sky_mask);
+
 			printf("waiting ...\n");
 
 			double be = get_cur_ms();
 //            g_sv->process(img_l, img_r);
-            sv->process(img_l, img_r);
+            sv->process(img_l, img_r, sky_mask);
 			double en = get_cur_ms();
 			printf("done ...\n");
 			printf("time cost: %lf ms\n", en - be);
@@ -139,7 +153,8 @@ int main(int argc, char **argv)
             sv->show_disp(debug_view);
 			publish_rgb(debug_pub, debug_view);
 
-//            imwrite(res_addr+num2str(i)+"_"+num2strbeta(j)+"_disp.png", debug_view);
+            imwrite(res_addr+num2str(i)+"_"+num2strbeta(j)+"_disp.png", debug_view);
+//            imwrite(res_addr+"test.png", debug_view);
 
 			waitKey(1);
 
