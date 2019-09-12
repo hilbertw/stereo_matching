@@ -70,9 +70,10 @@ void BM::process(Mat &img_l, Mat &img_r)
 }
 
 
-void BM::process(Mat &img_l, Mat &img_r, Mat &sky_mask)
+void BM::process(Mat &img_l, Mat &img_r, Mat &sky_mask, Mat &sky_mask_beta)
 {
     this->sky_mask = sky_mask;
+    this->sky_mask_beta = sky_mask_beta;
     process(img_l, img_r);
 }
 

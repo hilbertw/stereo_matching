@@ -104,19 +104,19 @@ int main(int argc, char **argv)
 
     auto sky_det = std::make_shared<sky_detector::SkyAreaDetector>();
 
-//     for (int i = 0; i <= 194; i++)
-//     {
-//        for (int j = 0; j <= 20; ++j)
-//        {
-    for (int i = 0; i <= 0; i++)
-    {
-        for (int j = 0; j <= 0; ++j)
+     for (int i = 0; i <= 194; i++)
+     {
+        for (int j = 0; j <= 20; ++j)
         {
+//    for (int i = 0; i <= 0; i++)
+//    {
+//        for (int j = 0; j <= 0; ++j)
+//        {
             std::string img_l_addr = data_addr+"testing/image_0/"+num2str(i)+"_"+num2strbeta(j)+".png";
             std::string img_r_addr = data_addr+"testing/image_1/"+num2str(i)+"_"+num2strbeta(j)+".png";
             std::cout << "processing " << img_l_addr << std::endl;
 
-//            std::string img_index = "000027_07";
+//            std::string img_index = "000000_09";
 //            std::string img_l_addr = data_addr+"testing/image_0/"+img_index+".png";
 //            std::string img_r_addr = data_addr+"testing/image_1/"+img_index+".png";
 
@@ -135,11 +135,14 @@ int main(int argc, char **argv)
             sky_det->detect(img_l, res_addr+num2str(i)+"_"+num2strbeta(j)+"_sky.png", sky_mask);
 //            sky_det->detect(img_l, res_addr+"test_sky.png", sky_mask);
 
+            Mat sky_mask_beta;
+            sky_det->detect(img_r, res_addr+num2str(i)+"_"+num2strbeta(j)+"_sky2.png", sky_mask_beta);
+
 			printf("waiting ...\n");
 
 			double be = get_cur_ms();
 //            g_sv->process(img_l, img_r);
-            sv->process(img_l, img_r, sky_mask);
+            sv->process(img_l, img_r, sky_mask, sky_mask_beta);
 			double en = get_cur_ms();
 			printf("done ...\n");
 			printf("time cost: %lf ms\n", en - be);

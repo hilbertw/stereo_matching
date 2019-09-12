@@ -98,15 +98,6 @@ int CT(const Mat &img_l, const Mat &img_r, const Point &l_pt, int disp, int win_
 
 void CT_pts(const Mat &img_l, const Mat &img_r, int u, int v, int win_h, int win_w, float* weight, uint64_t *cost_table_l, uint64_t *cost_table_r)
 {
-    if (v < win_h/2
-        || v > img_l.rows - 1 - win_h/2
-        || u < win_w/2
-        || u > img_l.cols - 1 - win_w/2)
-    {
-        cost_table_l[v*img_l.cols + u] = 999999;
-        cost_table_r[v*img_l.cols + u] = 999999;
-        return;
-    }
 
 	uint64_t value_l = 0, value_r = 0;
 
@@ -115,18 +106,16 @@ void CT_pts(const Mat &img_l, const Mat &img_r, int u, int v, int win_h, int win
 
     for (int i = -win_h / 2; i <= win_h / 2; ++i)
 	{
-        int y = v + i;
-//        int y = std::max(v + i, 0);		// check border
-//        y = std::min(y, img_l.rows - 1);
+        int y = std::max(v + i, 0);		// check border
+        y = std::min(y, img_l.rows - 1);
         for (int j = -win_w / 2; j <= win_w / 2; ++j)
 		{
-            int x = u + j;
 			if (i == 0 && j == 0)
 				continue;
 			if (WEIGHTED_COST && weight[(i + win_h / 2) * win_w + (j + win_w / 2)] < 0.5)
 				continue;
-//            int x = std::max(u + j, 0);
-//            x = std::min(x, img_l.cols - 1);
+            int x = std::max(u + j, 0);
+            x = std::min(x, img_l.cols - 1);
 
             value_l = (value_l << 1) | (img_l.at<uchar>(y, x) > ctr_pixel_l);
             value_r = (value_r << 1) | (img_r.at<uchar>(y, x) > ctr_pixel_r);

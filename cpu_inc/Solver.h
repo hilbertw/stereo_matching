@@ -11,9 +11,10 @@ const int COST_WIN_H = 3 / SCALE;
 const int COST_WIN_W = 5 / SCALE;
 const float UNIQUE_RATIO = 0.7;
 const bool WEIGHTED_COST = 0;
+const float LR_CHECK_DIS = 1;
 const int MEDIAN_FILTER_H = 5;
 const int MEDIAN_FILTER_W = 5;
-const int SPECKLE_SIZE = 2000 / SCALE;
+const int SPECKLE_SIZE = 1000 / SCALE;
 const int SPECKLE_DIS = 2;
 
 
@@ -25,10 +26,11 @@ public:
 
 	void show_disp(Mat &debug_view); 
     virtual void process(Mat &img_l, Mat &img_r) =0;
-    virtual void process(Mat &img_l, Mat &img_r, Mat &sky_mask) =0;
+    virtual void process(Mat &img_l, Mat &img_r, Mat &sky_mask, Mat &sky_mask_beta) =0;
 	void build_dsi();
 	void build_cost_table();
 	void build_dsi_from_table();
+    void build_dsi_from_table_beta();
 	float find_dsi_mean_max();
 	float find_table_mean_max();
 	void cost_horizontal_filter(int win_size);
@@ -36,6 +38,7 @@ public:
 	void fetch_cost(float *p);
 	void fetch_disparity(uchar *d);
 	void fetch_disparity(float *d);
+    void compute_subpixel(const Mat &disp, Mat &filtered_disp);
 	void post_filter();
 	void colormap();
 	Mat get_disp() const
@@ -45,11 +48,12 @@ public:
 
 protected:
 	Mat img_l, img_r;
-	Mat disp,  filtered_disp, colored_disp;
+    Mat disp, disp_beta, filtered_disp, filtered_disp_beta;
+    Mat colored_disp;
 	uint64_t *cost_table_l, *cost_table_r;
 	float *cost;
 	float *weight;
 	int disp_cnt;
-    Mat sky_mask;
+    Mat sky_mask, sky_mask_beta;
 };
 
