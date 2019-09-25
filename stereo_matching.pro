@@ -13,9 +13,9 @@ SOURCES += \
     cpu_src/SGM.cpp \
     cpu_src/Solver.cpp \
     cpu_src/utils.cpp \
-    demo1.cpp \
-    demo2.cpp \
-    sky_detector/imageSkyDetector.cpp
+    sky_detector/imageSkyDetector.cpp \
+    demo_old.cpp \
+    demo.cpp
 
 HEADERS += \
     cpu_inc/BM.h \

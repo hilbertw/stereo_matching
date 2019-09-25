@@ -48,8 +48,8 @@ include_directories(
 
 cuda_add_executable(
     sgm
-    # demo1.cpp
-    demo2.cpp
+    # demo_old.cpp
+    demo.cpp
     cpu_src/BM.cpp
     cpu_src/cost.cpp
     cpu_src/SGM.cpp

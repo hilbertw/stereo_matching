@@ -104,14 +104,14 @@ int main(int argc, char **argv)
 
     auto sky_det = std::make_shared<sky_detector::SkyAreaDetector>();
 
-     for (int i = 0; i <= 194; i++)
-     {
-        for (int j = 0; j <= 20; ++j)
-        {
-//    for (int i = 0; i <= 0; i++)
-//    {
-//        for (int j = 0; j <= 0; ++j)
+//     for (int i = 0; i <= 194; i++)
+//     {
+//        for (int j = 0; j <= 20; ++j)
 //        {
+    for (int i = 17; i <= 17; i++)
+    {
+        for (int j = 14; j <= 14; ++j)
+        {
             std::string img_l_addr = data_addr+"testing/image_0/"+num2str(i)+"_"+num2strbeta(j)+".png";
             std::string img_r_addr = data_addr+"testing/image_1/"+num2str(i)+"_"+num2strbeta(j)+".png";
             std::cout << "processing " << img_l_addr << std::endl;
