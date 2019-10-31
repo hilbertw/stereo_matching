@@ -26,7 +26,8 @@ public:
 
     void detect(const cv::Mat &img,
                 const std::string file_name,
-                cv::Mat &sky_label);
+                cv::Mat &sky_label,
+                int scale);
 
 private:
     cv::Mat _src_img; // 原始路淘图像

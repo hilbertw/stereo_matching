@@ -15,7 +15,8 @@ SOURCES += \
     cpu_src/utils.cpp \
     sky_detector/imageSkyDetector.cpp \
     demo_old.cpp \
-    demo.cpp
+    cpu_src/roshelper.cpp \
+    node.cpp
 
 HEADERS += \
     cpu_inc/BM.h \
@@ -28,7 +29,8 @@ HEADERS += \
     gpu_inc/cost.cuh \
     gpu_inc/post_filter.cuh \
     gpu_inc/SGM.cuh \
-    sky_detector/imageSkyDetector.h
+    sky_detector/imageSkyDetector.h \
+    cpu_inc/roshelper.h
 
 DISTFILES += \
     package.xml \
@@ -37,5 +39,6 @@ DISTFILES += \
     gpu_src/aggregation.cu \
     gpu_src/cost.cu \
     gpu_src/post_filter.cu \
-    gpu_src/SGM.cu
+    gpu_src/SGM.cu \
+    launch/demo.launch
 

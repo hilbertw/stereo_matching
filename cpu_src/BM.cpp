@@ -1,14 +1,41 @@
 #include "../cpu_inc/BM.h"
 
 
-BM::BM() : Solver()
+BM::BM(int h, int w, int s, int d)
+   : Solver(h, w, s, d)
 {}
 
 
 void BM::process(Mat &img_l, Mat &img_r)
 {
-	this->img_l = img_l;
-	this->img_r = img_r;
+    assert (img_l.rows == img_r.rows);
+    assert (img_l.cols == img_r.cols);
+    assert (img_l.channels() == img_r.channels());
+    assert (img_l.type() == img_r.type());
+    assert (img_l.type() == CV_8UC1);
+
+    if (scale > 1)
+    {
+        this->img_l.create(img_h, img_w, CV_8UC1);
+        this->img_r.create(img_h, img_w, CV_8UC1);
+        for (int i=0; i<img_h; ++i)
+        {
+            const uchar *ptr_l = img_l.ptr<uchar>(i);
+            const uchar *ptr_r = img_r.ptr<uchar>(i);
+            uchar *ptr_l_new = this->img_l.ptr<uchar>(i);
+            uchar *ptr_r_new = this->img_r.ptr<uchar>(i);
+            for (int j=0; j<img_w; ++j)
+            {
+                ptr_l_new[j] = ptr_l[j*scale];
+                ptr_r_new[j] = ptr_r[j*scale];
+            }
+        }
+    }
+    else
+    {
+        this->img_l = img_l;
+        this->img_r = img_r;
+    }
 
 	double be = get_cur_ms();
 	build_cost_table();
@@ -16,25 +43,25 @@ void BM::process(Mat &img_l, Mat &img_r)
 	printf("build cost takes %lf ms\n", get_cur_ms() - be);
 
 	be = get_cur_ms();
-	cost_horizontal_filter(COST_WIN_W);
-	cost_vertical_filter(COST_WIN_H);
+    cost_horizontal_filter(COST_WIN_W/scale);
+    cost_vertical_filter(COST_WIN_H/scale);
 	printf("cost filter takes %lf ms\n", get_cur_ms() - be);
 
 	be = get_cur_ms();
 
 	uchar *ptr = NULL;
 	float min_cost = FLT_MAX, sec_min_cost = FLT_MAX;
-	uchar min_d = INVALID_DISP, sec_min_d = INVALID_DISP;
-	for (int i = 0; i < IMG_H; i++)
+    uchar min_d = invalid_disp, sec_min_d = invalid_disp;
+    for (int i = 0; i < img_h; i++)
 	{
-		ptr = disp.ptr<uchar>(i);
-		for (int j = 0; j < IMG_W; j++)
+        ptr = disp.ptr<uchar>(i);
+        for (int j = 0; j < img_w; j++)
 		{
 			min_cost = FLT_MAX;
-			min_d = INVALID_DISP;
-			for (int d = 0; d < MAX_DISP; d++)
+            min_d = invalid_disp;
+            for (int d = 0; d < max_disp; d++)
 			{
-				int index = i * IMG_W * MAX_DISP + j * MAX_DISP + d;
+                int index = i * img_w * max_disp + j * max_disp + d;
 				if (cost[index] < min_cost)
 				{
 					min_cost = cost[index];
@@ -43,9 +70,9 @@ void BM::process(Mat &img_l, Mat &img_r)
 			}
 			// unique check
 			sec_min_cost = FLT_MAX;
-			for (int d = 0; d < MAX_DISP; d++)
+            for (int d = 0; d < max_disp; d++)
 			{
-				int index = i * IMG_W * MAX_DISP + j * MAX_DISP + d;
+                int index = i * img_w * max_disp + j * max_disp + d;
 				if (cost[index] < sec_min_cost && cost[index] != min_cost)
 				{
 					sec_min_cost = cost[index];
@@ -54,7 +81,7 @@ void BM::process(Mat &img_l, Mat &img_r)
 			}
 			if (min_cost / sec_min_cost > UNIQUE_RATIO && abs(min_d - sec_min_d) > 2)
 			{
-				ptr[j] = INVALID_DISP;
+                ptr[j] = invalid_disp;
 			}
 			else
 			{

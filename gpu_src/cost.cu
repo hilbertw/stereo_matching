@@ -2,10 +2,10 @@
 
 
 __global__ void cu_build_cost_table(uchar *d_img_l, uchar *d_img_r,
-																   uint64_t *d_cost_table_l, 
-	                                                               uint64_t *d_cost_table_r,
-	                                                               int img_w, int img_h,
-																   int win_w, int win_h)
+                                    uint64_t *d_cost_table_l,
+                                    uint64_t *d_cost_table_r,
+                                    int img_w, int img_h,
+                                    int win_w, int win_h)
 {
 	int index = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y + threadIdx.y * blockDim.x + threadIdx.x;
 	if (index > img_w * img_h - 1)  return;
@@ -37,9 +37,9 @@ __global__ void cu_build_cost_table(uchar *d_img_l, uchar *d_img_r,
 
 
 __global__ void cu_build_dsi_from_table(uint64_t *d_cost_table_l,
-																		   uint64_t *d_cost_table_r,
-																		   float *d_cost,
-																		   int img_w, int img_h, int max_disp)
+                                        uint64_t *d_cost_table_r,
+                                        float *d_cost,
+                                        int img_w, int img_h, int scale, int max_disp)
 {
 	int index = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y + threadIdx.y * blockDim.x + threadIdx.x;
 	if (index > img_w * img_h - 1)  return;
@@ -50,7 +50,7 @@ __global__ void cu_build_dsi_from_table(uint64_t *d_cost_table_l,
 	{
 		int dst_index = row * img_w * max_disp + col * max_disp + i;
 		uint64_t ct_l = d_cost_table_l[row*img_w + col];
-		uint64_t ct_r = d_cost_table_r[row*img_w + MAX(col - i / SCALE, 0)];
+        uint64_t ct_r = d_cost_table_r[row*img_w + MAX(col - i / scale, 0)];
 		d_cost[dst_index] = cu_hamming_cost(ct_l, ct_r);
 	}
 }

@@ -251,8 +251,8 @@ __global__ void cu_dp_L8(float *d_cost, short *d_dp, float *d_dp_min, int idx, i
 
 
 __global__ void aggregation(float *d_cost_sum, float *d_L1, float *d_L2, float *d_L3, float *d_L4,
-												    short *d_L5, short *d_L6, short *d_L7, short *d_L8,
-	                                                int img_w, int img_h, int max_disp)
+                            short *d_L5, short *d_L6, short *d_L7, short *d_L8,
+                            int img_w, int img_h, int max_disp)
 {
 	int index = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y + threadIdx.y * blockDim.x + threadIdx.x;
 	if (index > img_w * img_h *  max_disp - 1)  return;

@@ -6,7 +6,7 @@
 class BM : public Solver
 {
 public:
-	BM();
+    BM(int h, int w, int s, int d);
 	~BM();
 
 	virtual void process(Mat &img_l, Mat &img_r);

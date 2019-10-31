@@ -48,13 +48,13 @@ include_directories(
 
 cuda_add_executable(
     sgm
-    # demo_old.cpp
-    demo.cpp
+    node.cpp
     cpu_src/BM.cpp
     cpu_src/cost.cpp
     cpu_src/SGM.cpp
     cpu_src/Solver.cpp
     cpu_src/utils.cpp
+    cpu_src/roshelper.cpp
     gpu_src/aggregation.cu
     gpu_src/cost.cu
     gpu_src/post_filter.cu

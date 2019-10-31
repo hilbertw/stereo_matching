@@ -2,6 +2,7 @@
 #include "cpu_inc/BM.h"
 #include "cpu_inc/SGM.h"
 #include "cpu_inc/utils.h"
+#include "cpu_inc/roshelper.h"
 #include "gpu_inc/SGM.cuh"
 #include "gpu_inc/cost.cuh"
 
@@ -11,81 +12,15 @@
 std::string data_addr = "/home/hunterlew/data_stereo_flow_multiview/";
 std::string res_addr = "/home/hunterlew/catkin_ws/src/stereo_matching/res2/";
 
-struct CamIntrinsics
-{
-	float fx;
-	float fy;
-	float cx;
-	float cy;
-};
 
-CamIntrinsics read_calib(std::string file_addr)
-{
-	std::ifstream in;
-	in.open(file_addr);
-	if (!in.is_open()){
-		printf("reading calib file failed\n");
-		assert(false);
-	}
-	std::string str, str_tmp;
-	std::stringstream ss;
-	std::getline(in, str);  // only read left cam P0
-	ss.clear();
-	ss.str(str);
+bool g_use_gpu = false;
 
-	CamIntrinsics cam_para;
-	for (int i = 0; i < 13; i++)
-	{
-		if (i == 1)
-			ss >> cam_para.fx;
-		else if (i == 3)
-			ss >> cam_para.cx;
-		else if (i == 6)
-			ss >> cam_para.fy;
-		else if (i == 7)
-			ss >> cam_para.cy;
-		else
-			ss >> str_tmp;
-	}
+int g_img_w = 1240;
+int g_img_h = 360;
+int g_scale = 1;
+int g_max_disp = 128;
+int g_invalid_disp = g_max_disp+1;
 
-	return cam_para;
-}
-
-// if "no tf data" in rviz, run "rosrun tf static_transform_publisher 0 0 0 0 0 0 1 map my_frame 10"
-void publish_pointcloud(ros::Publisher pd_pub, 
-						const std::vector<cv::Point3d> &stereo_pts,
-						const std::vector<uchar> &stereo_pixel)
-{
-	sensor_msgs::PointCloud pd;
-	pd.header.stamp = ros::Time::now();
-	pd.header.frame_id = "my_frame";
-	pd.points.resize(stereo_pts.size());
-
-	pd.channels.resize(1);
-	pd.channels[0].name = "grey";
-	pd.channels[0].values.resize(stereo_pts.size());
-
-	for (int i = 0; i < stereo_pts.size(); ++i)
-	{
-		pd.points[i].x = stereo_pts[i].x;
-		pd.points[i].y = stereo_pts[i].y;
-		pd.points[i].z = stereo_pts[i].z;
-		pd.channels[0].values[i] = stereo_pixel[i];
-	}
-	pd_pub.publish(pd);
-}
-
-void publish_rgb(image_transport::Publisher disp_pub, const cv::Mat &disp)
-{
-	sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "8UC3", disp).toImageMsg();
-	disp_pub.publish(msg);
-}
-
-void publish_disp(image_transport::Publisher disp_pub, const cv::Mat &disp)
-{
-	sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "32FC1", disp).toImageMsg();
-	disp_pub.publish(msg);
-}
 
 int main(int argc, char **argv)
 {
@@ -96,12 +31,22 @@ int main(int argc, char **argv)
 	image_transport::Publisher disp_pub = it.advertise("/stereo_cam0/disp", 1);
 	image_transport::Publisher debug_pub = it.advertise("/stereo_cam0/debug_view", 1);
 
+    nh.param("/sgm_node/img_w", g_img_w, g_img_w);
+    nh.param("/sgm_node/img_h", g_img_h, g_img_h);
+    nh.param("/sgm_node/scale", g_scale, g_scale);
+    nh.param("/sgm_node/max_disp", g_max_disp, g_max_disp);
+    g_invalid_disp = g_max_disp+1;
+
+    printf("read config:\n");
+    printf("/sgm_node/img_w: %d\n", g_img_w);
+    printf("/sgm_node/img_h: %d\n", g_img_h);
+    printf("/sgm_node/scale: %d\n", g_scale);
+    printf("/sgm_node/max_disp: %d\n", g_max_disp);
+
 	Mat disp;
 	Mat debug_view;
 
-    auto sv = std::make_shared<SGM>();
-//    auto g_sv = std::make_shared<GPU_SGM>();
-
+    auto sv = std::make_shared<SGM>(g_img_h, g_img_w, g_scale, g_max_disp);
     auto sky_det = std::make_shared<sky_detector::SkyAreaDetector>();
 
 //     for (int i = 0; i <= 194; i++)
@@ -126,38 +71,33 @@ int main(int argc, char **argv)
 			printf("left size: %d, %d\n", img_l.rows, img_l.cols);
 			printf("right size: %d, %d\n", img_r.rows, img_r.cols);
 
-			resize(img_l, img_l, Size(IMG_W, IMG_H));
-			resize(img_r, img_r, Size(IMG_W, IMG_H));
-			printf("resized left size: %d, %d\n", img_l.rows, img_l.cols);
-			printf("resized right size: %d, %d\n", img_r.rows, img_r.cols);
+            resize(img_l, img_l, Size(g_img_w, g_img_h));
+            resize(img_r, img_r, Size(g_img_w, g_img_h));
+            printf("resized left size: %d, %d\n", img_l.rows, img_l.cols);
+            printf("resized right size: %d, %d\n", img_r.rows, img_r.cols);
 
             Mat sky_mask;
-            sky_det->detect(img_l, res_addr+num2str(i)+"_"+num2strbeta(j)+"_sky.png", sky_mask);
-//            sky_det->detect(img_l, res_addr+"test_sky.png", sky_mask);
+            sky_det->detect(img_l, res_addr+num2str(i)+"_"+num2strbeta(j)+"_sky.png", sky_mask, g_scale);
 
             Mat sky_mask_beta;
-            sky_det->detect(img_r, res_addr+num2str(i)+"_"+num2strbeta(j)+"_sky2.png", sky_mask_beta);
+            sky_det->detect(img_r, res_addr+num2str(i)+"_"+num2strbeta(j)+"_sky2.png", sky_mask_beta, g_scale);
 
 			printf("waiting ...\n");
 
 			double be = get_cur_ms();
-//            g_sv->process(img_l, img_r);
             sv->process(img_l, img_r, sky_mask, sky_mask_beta);
 			double en = get_cur_ms();
 			printf("done ...\n");
 			printf("time cost: %lf ms\n", en - be);
 
-//            disp = g_sv->get_disp();
             disp = sv->get_disp();
 			printf("disp size: %d, %d\n", disp.rows, disp.cols);
 			publish_disp(disp_pub, disp);
 
-//            g_sv->show_disp(debug_view);
             sv->show_disp(debug_view);
 			publish_rgb(debug_pub, debug_view);
 
             imwrite(res_addr+num2str(i)+"_"+num2strbeta(j)+"_disp.png", debug_view);
-//            imwrite(res_addr+"test.png", debug_view);
 
 			waitKey(1);
 
@@ -177,15 +117,13 @@ int main(int argc, char **argv)
 				float *ptr = disp.ptr<float>(i);
 				for (int j = 0; j < disp.cols; j++)
 				{
-					// printf("%f, ", ptr[j]);
-
-					if (ptr[j] == INVALID_DISP)  continue;
+                    if (ptr[j] == g_invalid_disp)  continue;
 					
 					double Zc = (cam_para.fx+cam_para.fy)/2.0 * baseline / (ptr[j]+1e-6);
 					if (Zc > max_range)  continue;
 
-					double Xc = (j - cam_para.cx/SCALE) * Zc / cam_para.fx;
-					double Yc = (i - cam_para.cy/SCALE) * Zc / cam_para.fy;
+                    double Xc = (j*g_scale - cam_para.cx) * Zc / cam_para.fx;
+                    double Yc = (i*g_scale - cam_para.cy) * Zc / cam_para.fy;
 
 					stereo_pts.push_back({Xc, Yc, Zc});
 					stereo_pixel.push_back(img_l.at<uchar>(i,j));

@@ -7,12 +7,12 @@
 
 const int CU_WIN_H = 7;
 const int CU_WIN_W = 9;
-const int CU_COST_WIN_H = 3 / SCALE;
-const int CU_COST_WIN_W = 5 / SCALE;
+const int CU_COST_WIN_H = 3;
+const int CU_COST_WIN_W = 5;
 const float CU_UNIQUE_RATIO = 0.7;
 const int CU_MEDIAN_FILTER_H = 5;
 const int CU_MEDIAN_FILTER_W = 5;
-const int CU_SPECKLE_SIZE = 1000 / SCALE;
+const int CU_SPECKLE_SIZE = 1000;
 const int CU_SPECKLE_DIS = 2;
 
 const bool CU_USE_8_PATH = 1;
@@ -21,7 +21,7 @@ const bool CU_USE_8_PATH = 1;
 class GPU_SGM
 {
 public:
-	GPU_SGM();
+    GPU_SGM(int h, int w, int s, int d);
 	~GPU_SGM();
 
 	void show_disp(Mat &debug_view);
@@ -34,6 +34,10 @@ public:
 
 private:
 	cudaStream_t stream1, stream2, stream3, stream4, stream5, stream6, stream7, stream8;
+
+    int img_h, img_w;
+    int scale;
+    int max_disp, invalid_disp;
 
 	Mat img_l, img_r;
 	uchar *d_img_l, *d_img_r;
@@ -49,6 +53,4 @@ private:
 	int P1, P2;
 
 	int *d_label, *d_area;
-
-	int disp_cnt;
 };

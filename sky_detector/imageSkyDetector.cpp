@@ -165,9 +165,12 @@ void SkyAreaDetector::check_sky_border_by_gray_value(const cv::Mat &src_image,
 
 void SkyAreaDetector::detect(const cv::Mat &img,
                              const std::string file_name,
-                             cv::Mat &sky_label) {
+                             cv::Mat &sky_label,
+                             int scale) {
+    _src_img = img;
+    if (scale > 1)
+        cv::resize(_src_img, _src_img, cv::Size(img.cols/scale, img.rows/scale));
 
-    _src_img = img.clone();
     if (img.channels() == 1)
         cv::cvtColor(_src_img, _src_img, CV_GRAY2BGR);
 

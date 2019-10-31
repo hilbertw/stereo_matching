@@ -1,7 +1,7 @@
 #include "../cpu_inc/cost.h"
 
 
-float SAD(const Mat &img_l, const Mat &img_r, const Point &l_pt, int disp, int win_h, int win_w, float* weight)
+float SAD(const Mat &img_l, const Mat &img_r, const Point &l_pt, int disp, int win_h, int win_w, float* weight, int scale)
 {
 	int y = 0, x_l = 0, x_r = 0;
 	float cost = 0;
@@ -15,7 +15,7 @@ float SAD(const Mat &img_l, const Mat &img_r, const Point &l_pt, int disp, int w
 		{
             x_l = std::max(l_pt.x + j, 0);
             x_l = std::min(x_l, img_l.cols - 1);
-            x_r = std::max(x_l - disp / SCALE, 0);
+            x_r = std::max(x_l - disp / scale, 0);
 			if (WEIGHTED_COST)
 			{
 				cost += abs(ptr_l[x_l] - ptr_r[x_r]) * weight[(i + win_h / 2) * win_w + (j + win_w / 2)];
@@ -30,7 +30,7 @@ float SAD(const Mat &img_l, const Mat &img_r, const Point &l_pt, int disp, int w
 }
 
 
-float SSD(const Mat &img_l, const Mat &img_r, const Point &l_pt, int disp, int win_h, int win_w, float* weight)
+float SSD(const Mat &img_l, const Mat &img_r, const Point &l_pt, int disp, int win_h, int win_w, float* weight, int scale)
 {
 	int y = 0, x_l = 0, x_r = 0;
 	float cost = 0;
@@ -44,7 +44,7 @@ float SSD(const Mat &img_l, const Mat &img_r, const Point &l_pt, int disp, int w
 		{
             x_l = std::max(l_pt.x + j, 0);
             x_l = std::min(x_l, img_l.cols - 1);
-            x_r = std::max(x_l - disp / SCALE, 0);
+            x_r = std::max(x_l - disp / scale, 0);
 			if (WEIGHTED_COST)
 			{
 				cost += (ptr_l[x_l] - ptr_r[x_r]) * (ptr_l[x_l] - ptr_r[x_r]) * weight[(i + win_h / 2) * win_w + (j + win_w / 2)];
@@ -59,7 +59,7 @@ float SSD(const Mat &img_l, const Mat &img_r, const Point &l_pt, int disp, int w
 }
 
 
-int CT(const Mat &img_l, const Mat &img_r, const Point &l_pt, int disp, int win_h, int win_w, float* weight)
+int CT(const Mat &img_l, const Mat &img_r, const Point &l_pt, int disp, int win_h, int win_w, float* weight, int scale)
 {
 	int y = 0, x_l = 0, x_r = 0;
 	uint64_t ct_l = 0, ct_r = 0;
@@ -82,7 +82,7 @@ int CT(const Mat &img_l, const Mat &img_r, const Point &l_pt, int disp, int win_
 				continue;
             x_l = std::max(l_pt.x + j, 0);
             x_l = std::min(x_l, img_l.cols - 1);
-            x_r = x_l - disp / SCALE;
+            x_r = x_l - disp / scale;
 
             if (x_r < 0)
                 continue;

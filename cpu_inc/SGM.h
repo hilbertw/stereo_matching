@@ -10,7 +10,7 @@ const bool USE_8_PATH = true;
 class SGM : public Solver
 {
 public:
-	SGM();
+    SGM(int h, int w, int s, int d);
 	virtual ~SGM();
 
 	virtual void process(Mat &img_l, Mat &img_r);

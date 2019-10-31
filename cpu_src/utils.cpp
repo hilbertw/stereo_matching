@@ -55,3 +55,35 @@ void stereo_record(int camid, std::string address)
         sleep(1);
 	}
 }
+
+CamIntrinsics read_calib(std::string file_addr)
+{
+    std::ifstream in;
+    in.open(file_addr);
+    if (!in.is_open()){
+        printf("reading calib file failed\n");
+        assert(false);
+    }
+    std::string str, str_tmp;
+    std::stringstream ss;
+    std::getline(in, str);  // only read left cam P0
+    ss.clear();
+    ss.str(str);
+
+    CamIntrinsics cam_para;
+    for (int i = 0; i < 13; i++)
+    {
+        if (i == 1)
+            ss >> cam_para.fx;
+        else if (i == 3)
+            ss >> cam_para.cx;
+        else if (i == 6)
+            ss >> cam_para.fy;
+        else if (i == 7)
+            ss >> cam_para.cy;
+        else
+            ss >> str_tmp;
+    }
+
+    return cam_para;
+}
