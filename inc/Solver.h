@@ -21,30 +21,17 @@ const int SPECKLE_DIS = 2;
 class Solver
 {
 public:
-    Solver(int h, int w, int s, int d);
+    explicit Solver(int h, int w, int s, int d);
 	virtual ~Solver();
 
-	void show_disp(Mat &debug_view); 
-    virtual void process(Mat &img_l, Mat &img_r) =0;
+	Solver(const Solver&) =delete;
+	Solver& operator=(Solver&) =delete;
+	
+	virtual void process(Mat &img_l, Mat &img_r) =0;
     virtual void process(Mat &img_l, Mat &img_r, Mat &sky_mask, Mat &sky_mask_beta) =0;
-	void build_dsi();
-	void build_cost_table();
-	void build_dsi_from_table();
-    void build_dsi_from_table_beta();
-	float find_dsi_mean_max();
-	float find_table_mean_max();
-	void cost_horizontal_filter(int win_size);
-	void cost_vertical_filter(int win_size);
-	void fetch_cost(float *p);
-	void fetch_disparity(uchar *d);
-	void fetch_disparity(float *d);
-    void compute_subpixel(const Mat &disp, Mat &filtered_disp);
-	void post_filter();
-	void colormap();
-	Mat get_disp() const
-	{
-		return filtered_disp;
-	}
+
+	virtual void show_disp(Mat &debug_view); 
+	virtual const Mat& get_disp() const { return filtered_disp;}
 
 protected:
     int img_h, img_w;
@@ -60,5 +47,23 @@ protected:
 	float *weight;
 
     Mat sky_mask, sky_mask_beta;
+
+protected:
+	void build_dsi();
+	void build_cost_table();
+	void build_dsi_from_table();
+    void build_dsi_from_table_beta();
+	float find_dsi_mean_max();
+	float find_table_mean_max();
+	void cost_horizontal_filter(int win_size);
+	void cost_vertical_filter(int win_size);
+	void fetch_cost(float *p);
+	void fetch_disparity(uchar *d);
+	void fetch_disparity(float *d);
+    void compute_subpixel(const Mat &disp, Mat &filtered_disp);
+	void post_filter();
+	void colormap();
 };
+
+typedef std::shared_ptr<Solver> SolverPtr;
 

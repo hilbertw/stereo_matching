@@ -1,4 +1,4 @@
-#include "../cpu_inc/Solver.h"
+#include "../inc/Solver.h"
 
 
 Solver::Solver(int h, int w, int s, int d)

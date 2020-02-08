@@ -1,4 +1,4 @@
-#include "../cpu_inc/BM.h"
+#include "../inc/BM.h"
 
 
 BM::BM(int h, int w, int s, int d)

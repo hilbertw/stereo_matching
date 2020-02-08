@@ -1,4 +1,5 @@
-#include "../cpu_inc/global.h"
+#include "../../inc/global.h"
+#include "cuda_inc.cuh"
 
 
 __global__ void cu_build_cost_table(uchar *d_img_l, uchar *d_img_r,

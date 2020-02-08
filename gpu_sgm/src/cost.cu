@@ -1,4 +1,4 @@
-#include "../gpu_inc/cost.cuh"
+#include "../inc/cost.cuh"
 
 
 __global__ void cu_build_cost_table(uchar *d_img_l, uchar *d_img_r,

@@ -1,8 +1,10 @@
-#include "../cpu_inc/global.h"
-#include "../cpu_inc/utils.h"
-#include "../gpu_inc/cost.cuh"
-#include "../gpu_inc/aggregation.cuh"
-#include "../gpu_inc/post_filter.cuh"
+#include "../../inc/global.h"
+#include "../../inc/utils.h"
+#include "../inc/cost.cuh"
+#include "../inc/aggregation.cuh"
+#include "../inc/post_filter.cuh"
+
+#include "cuda_inc.cuh"
 
 
 const int CU_WIN_H = 7;
@@ -21,18 +23,20 @@ const bool CU_USE_8_PATH = 1;
 class GPU_SGM
 {
 public:
-    GPU_SGM(int h, int w, int s, int d);
-	~GPU_SGM();
+    explicit GPU_SGM(int h, int w, int s, int d);
+	virtual ~GPU_SGM();
 
-	void show_disp(Mat &debug_view);
-	void process(Mat &img_l, Mat &img_r);
-	void colormap();
-	Mat get_disp() const
-	{
-		return filtered_disp;
-	}
+	GPU_SGM(const GPU_SGM&) =delete;
+    GPU_SGM& operator=(const GPU_SGM&) =delete;
+	
+	virtual void process(Mat &img_l, Mat &img_r);
+
+	virtual void show_disp(Mat &debug_view); 
+	virtual const Mat& get_disp() const { return filtered_disp;}
 
 private:
+	void colormap();
+
 	cudaStream_t stream1, stream2, stream3, stream4, stream5, stream6, stream7, stream8;
 
     int img_h, img_w;
@@ -54,3 +58,5 @@ private:
 
 	int *d_label, *d_area;
 };
+
+typedef std::shared_ptr<GPU_SGM> GSGMPtr;

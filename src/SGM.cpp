@@ -1,4 +1,4 @@
-#include "../cpu_inc/SGM.h"
+#include "../inc/SGM.h"
 
 
 SGM::SGM(int h, int w, int s, int d)

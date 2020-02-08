@@ -1,4 +1,5 @@
-#include "../cpu_inc/global.h"
+#include "../../inc/global.h"
+#include "cuda_inc.cuh"
 
 
 __global__ void cu_dp_L1(float *d_cost, float *d_dp, float *d_dp_min, int img_w, int img_h, int max_disp, int P1, int P2);

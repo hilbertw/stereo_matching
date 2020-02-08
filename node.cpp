@@ -1,19 +1,19 @@
-#include "cpu_inc/global.h"
-#include "cpu_inc/BM.h"
-#include "cpu_inc/SGM.h"
-#include "cpu_inc/utils.h"
-#include "cpu_inc/roshelper.h"
-#include "gpu_inc/SGM.cuh"
-#include "gpu_inc/cost.cuh"
+#include "inc/global.h"
+#include "inc/BM.h"
+#include "inc/SGM.h"
+#include "inc/utils.h"
+#include "inc/roshelper.h"
 
 #include "sky_detector/imageSkyDetector.h"
+typedef std::shared_ptr<sky_detector::SkyAreaDetector> SkyDetPtr;
 
+// #include "gpu_sgm/inc/SGM.cuh"
 
 std::string data_addr = "/home/hunterlew/data_stereo_flow_multiview/";
 std::string res_addr = "/home/hunterlew/catkin_ws/src/stereo_matching/res2/";
 
 
-bool g_use_gpu = false;
+bool g_use_gpu = false;  // TODO: config in CMakelists
 
 int g_img_w = 1240;
 int g_img_h = 360;
@@ -46,8 +46,9 @@ int main(int argc, char **argv)
 	Mat disp;
 	Mat debug_view;
 
-    auto sv = std::make_shared<SGM>(g_img_h, g_img_w, g_scale, g_max_disp);
-    auto sky_det = std::make_shared<sky_detector::SkyAreaDetector>();
+	SolverPtr sv = std::make_shared<SGM>(g_img_h, g_img_w, g_scale, g_max_disp);
+	// GSGMPtr gsv = std::make_shared<GPU_SGM>(g_img_h, g_img_w, g_scale, g_max_disp);
+	SkyDetPtr sky_det = std::make_shared<sky_detector::SkyAreaDetector>();
 
 //     for (int i = 0; i <= 194; i++)
 //     {
@@ -59,7 +60,7 @@ int main(int argc, char **argv)
         {
             std::string img_l_addr = data_addr+"testing/image_0/"+num2str(i)+"_"+num2strbeta(j)+".png";
             std::string img_r_addr = data_addr+"testing/image_1/"+num2str(i)+"_"+num2strbeta(j)+".png";
-            std::cout << "processing " << img_l_addr << std::endl;
+			printf("processing %s\n", img_l_addr.c_str());
 
 //            std::string img_index = "000000_09";
 //            std::string img_l_addr = data_addr+"testing/image_0/"+img_index+".png";
@@ -76,29 +77,37 @@ int main(int argc, char **argv)
             printf("resized left size: %d, %d\n", img_l.rows, img_l.cols);
             printf("resized right size: %d, %d\n", img_r.rows, img_r.cols);
 
+			printf("calling sky detector ...\n");
+
             Mat sky_mask;
             sky_det->detect(img_l, res_addr+num2str(i)+"_"+num2strbeta(j)+"_sky.png", sky_mask, g_scale);
 
             Mat sky_mask_beta;
             sky_det->detect(img_r, res_addr+num2str(i)+"_"+num2strbeta(j)+"_sky2.png", sky_mask_beta, g_scale);
 
-			printf("waiting ...\n");
+			printf("calling sky detector end\n");
+
+			printf("computing stereo matching waiting ...\n");
 
 			double be = get_cur_ms();
             sv->process(img_l, img_r, sky_mask, sky_mask_beta);
 			double en = get_cur_ms();
-			printf("done ...\n");
+			printf("stereo matching done\n");
 			printf("time cost: %lf ms\n", en - be);
 
+			// be = get_cur_ms();
+			// gsv->process(img_l, img_r);
+			// en = get_cur_ms();
+			// printf("stereo matching (gpu version) done\n");
+			// printf("time cost: %lf ms\n", en - be);
+
             disp = sv->get_disp();
-			printf("disp size: %d, %d\n", disp.rows, disp.cols);
-			publish_disp(disp_pub, disp);
+			publish_float32(disp_pub, disp);
 
             sv->show_disp(debug_view);
 			publish_rgb(debug_pub, debug_view);
 
             imwrite(res_addr+num2str(i)+"_"+num2strbeta(j)+"_disp.png", debug_view);
-
 			waitKey(1);
 
 			// read calibration

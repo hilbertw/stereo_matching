@@ -1,4 +1,4 @@
-#include "../gpu_inc/post_filter.cuh"
+#include "../inc/post_filter.cuh"
 
 
 __global__ void cu_subpixel(float *d_cost, uchar *d_disp, float *d_filtered_disp, int img_w, int img_h, int max_disp, int invalid)

@@ -1,4 +1,4 @@
-#include "../cpu_inc/utils.h"
+#include "../inc/utils.h"
 
 
 double get_cur_ms()

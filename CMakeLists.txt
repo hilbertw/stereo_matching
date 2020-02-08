@@ -42,23 +42,23 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${CUDA_INCLUDE_DIRS}
-  cpu_inc
-  gpu_inc
+  inc
+  gpu_sgm/inc
 )
 
 cuda_add_executable(
     sgm
     node.cpp
-    cpu_src/BM.cpp
-    cpu_src/cost.cpp
-    cpu_src/SGM.cpp
-    cpu_src/Solver.cpp
-    cpu_src/utils.cpp
-    cpu_src/roshelper.cpp
-    gpu_src/aggregation.cu
-    gpu_src/cost.cu
-    gpu_src/post_filter.cu
-    gpu_src/SGM.cu
+    src/BM.cpp
+    src/cost.cpp
+    src/SGM.cpp
+    src/Solver.cpp
+    src/utils.cpp
+    src/roshelper.cpp
+    gpu_sgm/src/aggregation.cu
+    gpu_sgm/src/cost.cu
+    gpu_sgm/src/post_filter.cu
+    gpu_sgm/src/SGM.cu
 
     sky_detector/imageSkyDetector.cpp
 )

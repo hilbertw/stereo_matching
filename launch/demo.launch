@@ -1,7 +1,7 @@
 <launch>
     <node pkg="stereo_matching" type="sgm" name="sgm_node" output="screen">
 
-        <param name="use_gpu" type="int" value="0" />
+        <!-- <param name="use_gpu" type="int" value="0" /> -->
 
         <param name="img_w" type="int" value="1240" />
         <param name="img_h" type="int" value="360" />

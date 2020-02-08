@@ -1,4 +1,4 @@
-#include "../gpu_inc/aggregation.cuh"
+#include "../inc/aggregation.cuh"
 
 
 __device__ static float atomicMin(float* address, float val)

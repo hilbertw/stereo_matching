@@ -1,4 +1,4 @@
-#include "../gpu_inc/SGM.cuh"
+#include "../inc/SGM.cuh"
 
 
 GPU_SGM::GPU_SGM(int h, int w, int s, int d)
