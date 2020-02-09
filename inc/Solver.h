@@ -4,6 +4,8 @@
 #include "utils.h"
 #include "cost.h"
 
+#include "../LKRefine/LKSubPixel.h"
+
 
 const int WIN_H = 7;
 const int WIN_W = 9;
@@ -47,6 +49,8 @@ protected:
 	float *weight;
 
     Mat sky_mask, sky_mask_beta;
+
+	LKSubPixelPtr lkptr;
 
 protected:
 	void build_dsi();

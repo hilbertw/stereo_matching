@@ -820,6 +820,9 @@ void SGM::process(Mat &img_l, Mat &img_r)
     // median filter + speckle filter
     post_filter();
 
+    // // lk subpixel refinement to solve pixel-locking
+    // lkptr->LKRefine(img_l, img_r, filtered_disp);
+
 }
 
 

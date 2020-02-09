@@ -47,6 +47,8 @@ Solver::Solver(int h, int w, int s, int d)
 
     sky_mask.release();
     sky_mask_beta.release();
+
+	lkptr = LKSubPixel::create(h, w, s, d);
 }
 
 

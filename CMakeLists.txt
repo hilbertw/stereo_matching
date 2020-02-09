@@ -44,6 +44,8 @@ include_directories(
   ${CUDA_INCLUDE_DIRS}
   inc
   gpu_sgm/inc
+  sky_detector
+  LKRefine
 )
 
 cuda_add_executable(
@@ -61,6 +63,9 @@ cuda_add_executable(
     gpu_sgm/src/SGM.cu
 
     sky_detector/imageSkyDetector.cpp
+    
+    LKRefine/LKSubPixel.cpp
+    LKRefine/LKSubPixelImpl.cpp
 )
 
 target_link_libraries(
